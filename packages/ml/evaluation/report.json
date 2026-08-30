@@ -1,0 +1,70 @@
+{
+  "test": {
+    "n_test_payments": 10000,
+    "baselines": [
+      {
+        "name": "Fixed 6h Retry",
+        "payments_recovered": 4183,
+        "amount_recovered_inr": 4590672.481201303,
+        "recovery_rate": 0.4183,
+        "unnecessary_retries": 5817,
+        "unnecessary_retry_rate": 0.5817
+      },
+      {
+        "name": "Rule-Based (Oracle-Assisted)",
+        "payments_recovered": 5015,
+        "amount_recovered_inr": 5477158.898520534,
+        "recovery_rate": 0.5015,
+        "unnecessary_retries": 4985,
+        "unnecessary_retry_rate": 0.4985
+      }
+    ],
+    "rapid": {
+      "name": "RAPID",
+      "payments_recovered": 4723,
+      "amount_recovered_inr": 5138205.232601677,
+      "recovery_rate": 0.4723,
+      "unnecessary_retries": 5277,
+      "unnecessary_retry_rate": 0.5277
+    },
+    "vs_fixed_retry": {
+      "recovery_rate_improvement": 0.05399999999999999,
+      "amount_recovered_improvement_inr": 547532.7514003739,
+      "unnecessary_retry_reduction": 0.05400000000000005
+    }
+  },
+  "distribution_shift": {
+    "n_test_payments": 10000,
+    "baselines": [
+      {
+        "name": "Fixed 6h Retry",
+        "payments_recovered": 1,
+        "amount_recovered_inr": 379.6465326067484,
+        "recovery_rate": 0.0001,
+        "unnecessary_retries": 9999,
+        "unnecessary_retry_rate": 0.9999
+      },
+      {
+        "name": "Rule-Based (Oracle-Assisted)",
+        "payments_recovered": 85,
+        "amount_recovered_inr": 96370.36919172826,
+        "recovery_rate": 0.0085,
+        "unnecessary_retries": 9915,
+        "unnecessary_retry_rate": 0.9915
+      }
+    ],
+    "rapid": {
+      "name": "RAPID",
+      "payments_recovered": 84,
+      "amount_recovered_inr": 95990.72265912149,
+      "recovery_rate": 0.0084,
+      "unnecessary_retries": 9916,
+      "unnecessary_retry_rate": 0.9916
+    },
+    "vs_fixed_retry": {
+      "recovery_rate_improvement": 0.0083,
+      "amount_recovered_improvement_inr": 95611.07612651473,
+      "unnecessary_retry_reduction": 0.008299999999999974
+    }
+  }
+}

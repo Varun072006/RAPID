@@ -1,0 +1,52 @@
+# ── Secrets ───────────────────────────────────────────────────
+.env
+*.env.local
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.uv/
+uv.lock
+*.pkl
+*.parquet
+
+# ── ML artifacts ──────────────────────────────────────────────
+packages/ml/models/*.pkl
+packages/ml/simulation/*.parquet
+
+# ── Testing ───────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.coveragerc
+
+# ── Node / Next.js ────────────────────────────────────────────
+node_modules/
+.next/
+out/
+apps/dashboard/.next/
+apps/dashboard/node_modules/
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────────
+*.log
+
+# ── Docs ──────────────────────────────────────────────────────
+site/
