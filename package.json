@@ -1,0 +1,11 @@
+{
+  "name": "rapid-root",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/dashboard run dev",
+    "build": "npm --prefix apps/dashboard run build",
+    "start": "npm --prefix apps/dashboard run start",
+    "install:dashboard": "npm --prefix apps/dashboard install"
+  }
+}

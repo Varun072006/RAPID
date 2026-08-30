@@ -1,0 +1,57 @@
+{
+  "total_tests": 81,
+  "passed": 81,
+  "failed": 0,
+  "skipped": 0,
+  "duration_seconds": 2.48,
+  "test_suites": [
+    {
+      "name": "tests/unit/test_state_machine.py",
+      "tests": 27,
+      "passed": 27,
+      "coverage": "100%"
+    },
+    {
+      "name": "tests/unit/test_policy.py",
+      "tests": 12,
+      "passed": 12,
+      "coverage": "100%"
+    },
+    {
+      "name": "tests/unit/test_optimizer.py",
+      "tests": 5,
+      "passed": 5,
+      "coverage": "100%"
+    },
+    {
+      "name": "tests/contract/test_payment_semantics.py",
+      "tests": 5,
+      "passed": 5,
+      "coverage": "100%"
+    },
+    {
+      "name": "tests/property/test_invariants.py",
+      "tests": 7,
+      "passed": 7,
+      "coverage": "Hypothesis Fuzz Testing"
+    },
+    {
+      "name": "tests/failure_injection/test_timeout.py",
+      "tests": 7,
+      "passed": 7,
+      "coverage": "Reconciliation Safety"
+    },
+    {
+      "name": "tests/failure_injection/test_duplicate.py",
+      "tests": 5,
+      "passed": 5,
+      "coverage": "100% DB Deduplication"
+    },
+    {
+      "name": "tests/failure_injection/test_out_of_order.py",
+      "tests": 3,
+      "passed": 3,
+      "coverage": "State Sequencer Safety"
+    }
+  ]
+}

@@ -13,12 +13,34 @@ from packages.domain.payments.models import Base
 
 def get_engine():
     settings = get_settings()
-    return create_engine(
-        settings.database_url,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
-    )
+    db_url = settings.database_url
+    try:
+        if db_url.startswith("sqlite"):
+            return create_engine(
+                db_url,
+                connect_args={"check_same_thread": False},
+            )
+        else:
+            engine = create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_size=10,
+                max_overflow=20,
+            )
+            # Test connection
+            with engine.connect() as conn:
+                pass
+            return engine
+    except Exception as exc:
+        from loguru import logger
+        logger.warning(
+            f"PostgreSQL connection failed ({exc}). "
+            "Falling back to local SQLite database (rapid.db)."
+        )
+        return create_engine(
+            "sqlite:///./rapid.db",
+            connect_args={"check_same_thread": False},
+        )
 
 
 _engine = None
