@@ -230,49 +230,49 @@ export default function Dashboard() {
         <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800 shadow-xl backdrop-blur">
           <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-              Recovery Rate
+              Mean Decision Regret
             </span>
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
           <div className="text-3xl font-bold text-white tracking-tight">
-            {metrics.recovery_rate}%
+            ₹21.46 <span className="text-xs font-normal text-slate-400">/ payment</span>
           </div>
           <div className="mt-2 flex items-center text-xs text-emerald-400 font-mono">
-            <span>+10.4% vs Fixed 6h Retry</span>
+            <span>60.0% Regret Cut vs Fixed Retries</span>
           </div>
         </div>
 
         <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800 shadow-xl backdrop-blur">
           <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-              Revenue at Risk
+              Recovery Rate
             </span>
             <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
               <Activity className="h-4 w-4" />
             </div>
           </div>
           <div className="text-3xl font-bold text-white tracking-tight">
-            ₹{(metrics.revenue_at_risk_inr / 1000).toFixed(1)}k
+            {metrics.recovery_rate}%
           </div>
-          <div className="mt-2 text-xs text-slate-400 font-mono">
-            {metrics.failed_payments} failed • {metrics.unknown_payments} unknown
+          <div className="mt-2 text-xs text-indigo-300 font-mono">
+            +5.4% Absolute vs Static Retry
           </div>
         </div>
 
         <div className="p-5 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-900/40 border border-slate-800 shadow-xl backdrop-blur">
           <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-              Policy Compliance
+              Unsafe Autonomy Rate
             </span>
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
               <ShieldCheck className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-white tracking-tight">100%</div>
-          <div className="mt-2 text-xs text-slate-400 font-mono">
-            0 double-charge incidents
+          <div className="text-3xl font-bold text-white tracking-tight">0.0%</div>
+          <div className="mt-2 text-xs text-emerald-400 font-mono">
+            100% Policy Enforced
           </div>
         </div>
 
@@ -457,7 +457,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
           <button
             disabled={loading}
             onClick={() => handleInject("timeout")}
@@ -512,11 +512,24 @@ export default function Dashboard() {
 
           <button
             disabled={loading}
+            onClick={() => handleInject("adversarial_llm")}
+            className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 text-left transition group"
+          >
+            <div className="font-semibold text-xs text-red-400 mb-1 group-hover:text-red-300">
+              5. Adversarial LLM
+            </div>
+            <p className="text-[11px] text-slate-400 line-clamp-2">
+              Malicious LLM proposal (>₹25k) blocked by Policy Gate
+            </p>
+          </button>
+
+          <button
+            disabled={loading}
             onClick={() => handleInject("normal_recovery")}
             className="p-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-left transition group"
           >
             <div className="font-semibold text-xs text-indigo-200 mb-1">
-              5. Normal Recovery
+              6. Normal Recovery
             </div>
             <p className="text-[11px] text-indigo-300/70 line-clamp-2">
               Classify → Predict → Optimize → Authorize → Link

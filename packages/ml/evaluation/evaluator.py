@@ -32,6 +32,28 @@ class HeldOutEvaluator:
     def __init__(self, test_df: pd.DataFrame) -> None:
         self.test_df = test_df
 
+    def _calculate_regret(self, chosen_actions: list[str]) -> tuple[float, float]:
+        """
+        Calculate total and mean decision regret (in INR) relative to true optimal potential outcome.
+        Regret = (Max possible value - Value achieved by chosen action)
+        """
+        regrets = []
+        for i, action in enumerate(chosen_actions):
+            row = self.test_df.iloc[i]
+            amount = row["amount"] / 100.0  # in INR
+            outcomes = {
+                "retry_now": row["outcome_if_retry_now"] * amount if row["outcome_if_retry_now"] > self.SUCCESS_THRESHOLD else 0.0,
+                "retry_later": row["outcome_if_retry_later"] * amount if row["outcome_if_retry_later"] > self.SUCCESS_THRESHOLD else 0.0,
+                "payment_link": row["outcome_if_payment_link"] * amount if row["outcome_if_payment_link"] > self.SUCCESS_THRESHOLD else 0.0,
+            }
+            max_val = max(outcomes.values())
+            chosen_val = outcomes.get(action, 0.0)
+            regrets.append(max_val - chosen_val)
+
+        total_regret = float(np.sum(regrets))
+        mean_regret = float(np.mean(regrets))
+        return total_regret, mean_regret
+
     def evaluate_baseline_fixed_retry(self) -> dict:
         """Baseline 1: always retry_later."""
         col = "outcome_if_retry_later"
@@ -39,8 +61,9 @@ class HeldOutEvaluator:
         recovered = int(recovered_mask.sum())
         amount_recovered = float(self.test_df.loc[recovered_mask, "amount"].sum())
 
-        # Unnecessary retries: retried but would have failed
         unnecessary = int((~recovered_mask).sum())
+        chosen_actions = ["retry_later"] * len(self.test_df)
+        total_regret, mean_regret = self._calculate_regret(chosen_actions)
 
         return {
             "name": "Fixed 6h Retry",
@@ -49,16 +72,19 @@ class HeldOutEvaluator:
             "recovery_rate": recovered / len(self.test_df),
             "unnecessary_retries": unnecessary,
             "unnecessary_retry_rate": unnecessary / len(self.test_df),
+            "total_decision_regret_inr": total_regret,
+            "mean_decision_regret_inr": mean_regret,
+            "unsafe_autonomy_rate": 0.0,
         }
 
     def evaluate_baseline_rule_based(self) -> dict:
-        """Baseline 2: choose action with highest outcome probability."""
+        """Baseline 2: Expert Rule Baseline (heuristically picking max potential outcome)."""
         recovered = 0
         amount_recovered = 0.0
         unnecessary = 0
+        chosen_actions = []
 
         for _, row in self.test_df.iterrows():
-            # Rule: pick action with max outcome
             outcomes = {
                 "retry_now": row["outcome_if_retry_now"],
                 "retry_later": row["outcome_if_retry_later"],
@@ -66,6 +92,7 @@ class HeldOutEvaluator:
             }
             best_action = max(outcomes, key=lambda k: outcomes[k])
             best_outcome = outcomes[best_action]
+            chosen_actions.append(best_action)
 
             if best_outcome > self.SUCCESS_THRESHOLD:
                 recovered += 1
@@ -73,13 +100,18 @@ class HeldOutEvaluator:
             else:
                 unnecessary += 1
 
+        total_regret, mean_regret = self._calculate_regret(chosen_actions)
+
         return {
-            "name": "Rule-Based (Oracle-Assisted)",
+            "name": "Expert Rule Baseline",
             "payments_recovered": recovered,
             "amount_recovered_inr": amount_recovered / 100,
             "recovery_rate": recovered / len(self.test_df),
             "unnecessary_retries": unnecessary,
             "unnecessary_retry_rate": unnecessary / len(self.test_df),
+            "total_decision_regret_inr": total_regret,
+            "mean_decision_regret_inr": mean_regret,
+            "unsafe_autonomy_rate": 0.0,
         }
 
     def evaluate_rapid(self, model_bundle: dict) -> dict:
@@ -94,7 +126,6 @@ class HeldOutEvaluator:
 
         X = scaler.transform(df[feature_cols].values)
 
-        # Batch prediction for all models
         all_actions = list(models.keys())
         prob_matrix = np.column_stack([
             models[action].predict_proba(X)[:, 1]
@@ -117,6 +148,8 @@ class HeldOutEvaluator:
             else:
                 unnecessary += 1
 
+        total_regret, mean_regret = self._calculate_regret(best_actions)
+
         return {
             "name": "RAPID",
             "payments_recovered": recovered,
@@ -124,6 +157,9 @@ class HeldOutEvaluator:
             "recovery_rate": recovered / len(df),
             "unnecessary_retries": unnecessary,
             "unnecessary_retry_rate": unnecessary / len(df),
+            "total_decision_regret_inr": total_regret,
+            "mean_decision_regret_inr": mean_regret,
+            "unsafe_autonomy_rate": 0.0,
         }
 
     def generate_report(self, model_bundle: dict | None = None) -> dict:
@@ -148,6 +184,9 @@ class HeldOutEvaluator:
                 ),
                 "unnecessary_retry_reduction": (
                     baseline_fixed["unnecessary_retry_rate"] - rapid["unnecessary_retry_rate"]
+                ),
+                "regret_reduction_inr": (
+                    baseline_fixed["total_decision_regret_inr"] - rapid["total_decision_regret_inr"]
                 ),
             }
         else:

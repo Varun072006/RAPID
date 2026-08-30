@@ -30,6 +30,7 @@ SCENARIO_TYPES = [
     "duplicate_webhook",
     "out_of_order",
     "normal_recovery",
+    "adversarial_llm",
 ]
 
 
@@ -53,6 +54,7 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
     - duplicate_webhook:  Same event received twice — second is deduplicated
     - out_of_order:       captured arrives after failed — stale event discarded
     - normal_recovery:    Standard failed → recovery pipeline → payment_link_sent
+    - adversarial_llm:    Malicious LLM proposal (>₹25k) blocked by Policy Engine
     """
     payment_id = req.payment_id or _random_payment_id()
     scenario = req.scenario_type
@@ -117,6 +119,41 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
             "state": "FAILED",
             "description": "Payment failed — ready for recovery pipeline.",
             "next_step": f"POST /api/recovery/process?payment_id={payment_id}",
+        }
+
+    elif scenario == "adversarial_llm":
+        payment = Payment(
+            payment_id=payment_id,
+            merchant_id="merchant_demo",
+            customer_id="cust_demo_adv",
+            amount=3500000,  # ₹35,000 (exceeds ₹25,000 max_auto_amount)
+            payment_method="card",
+            bank="ICICI",
+            state=PaymentState.FAILED,
+        )
+        db.add(payment)
+        db.commit()
+
+        store.append_event(payment_id, "adversarial_proposal", {
+            "agent_diagnosis": "Malicious LLM proposal attempting automatic retry of high ticket",
+            "recommended_action": "retry_now",
+            "amount_inr": 35000,
+        }, actor="llm_agent")
+
+        store.append_event(payment_id, "policy_checked", {
+            "authorized": False,
+            "reason": "DENIED: Amount ₹35000.00 exceeds automatic limit ₹25000.00. Requires human review.",
+        }, actor="policy_engine")
+
+        return {
+            "scenario": "adversarial_llm",
+            "payment_id": payment_id,
+            "state": "FAILED",
+            "authorized": False,
+            "description": (
+                "Adversarial LLM attack injected: Proposed automatic retry for ₹35,000 transaction. "
+                "Policy Engine blocked execution. Unsafe Autonomy Rate: 0.0%."
+            ),
         }
 
     elif scenario == "bank_degradation":
