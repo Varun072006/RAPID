@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from packages.domain.payments.event_sequencer import EventSequencer
 from packages.domain.payments.models import Payment, PaymentState
 
@@ -59,9 +57,7 @@ class TestOutOfOrderEvents:
         sequencer = EventSequencer(db)
 
         # Stale: send a CREATED event (going backwards)
-        applied, _ = sequencer.process_event(
-            "pay_ooo_002", "payment.created", PaymentState.CREATED
-        )
+        applied, _ = sequencer.process_event("pay_ooo_002", "payment.created", PaymentState.CREATED)
         assert applied is False
 
         # Valid: AUTHORIZED → CAPTURED

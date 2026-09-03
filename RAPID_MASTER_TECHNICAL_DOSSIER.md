@@ -13,7 +13,7 @@
 - **Track**: Track 03 — AI Revenue Recovery
 - **GitHub URL**: `https://github.com/Varun072006/rapid-payment-recovery`
 - **Demo URL**: `http://localhost:3000` (Local Next.js Replay Dashboard)
-- **Demo Video URL**: `https://youtu.be/rapid-payment-recovery-demo`
+- **Demo Video URL**: *(Pending upload)*
 - **Team Size**: 1 (Solo Builder)
 - **Exact Role**: Full-Stack Distributed Systems, Fintech ML & Safety Systems Engineer
 - **Time Spent**: Full architecture and implementation cycle

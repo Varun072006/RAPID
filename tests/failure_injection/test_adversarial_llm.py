@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
-from packages.domain.policy.engine import PolicyEngine, MerchantPolicy
+from packages.domain.policy.engine import MerchantPolicy, PolicyEngine
 
 
 class TestAdversarialLLM:
-    """Proves the Policy Engine acts as an impenetrable safety gate against untrusted LLM outputs."""
+    """Proves Policy Engine acts as safety gate against untrusted LLM outputs."""
 
     def test_llm_recommends_policy_banned_action(self):
         """LLM attempts an unauthorized action like 'refund' or 'override_limit'."""

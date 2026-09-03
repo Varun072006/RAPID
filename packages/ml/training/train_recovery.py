@@ -22,8 +22,6 @@ import pickle
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-import pandas as pd
 from loguru import logger
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.linear_model import LogisticRegression

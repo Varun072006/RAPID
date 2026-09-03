@@ -46,14 +46,10 @@ def extract_features(payment: dict) -> dict[str, float]:
     """
     return {
         "amount": float(payment.get("amount", 0)),
-        "payment_method": PAYMENT_METHOD_MAP.get(
-            str(payment.get("payment_method", "card")), 0
-        ),
+        "payment_method": PAYMENT_METHOD_MAP.get(str(payment.get("payment_method", "card")), 0),
         "bank": int(payment.get("bank", 0)),
         "latency_ms": float(payment.get("latency_ms", 500)),
-        "error_code": ERROR_CODE_MAP.get(
-            str(payment.get("error_code", "AUTHORIZATION_FAILED")), 1
-        ),
+        "error_code": ERROR_CODE_MAP.get(str(payment.get("error_code", "AUTHORIZATION_FAILED")), 1),
         "customer_days_active": float(payment.get("customer_days_active", 30)),
         "customer_success_rate": float(payment.get("customer_success_rate", 0.5)),
         "customer_churn_risk": float(payment.get("customer_churn_risk", 0.3)),

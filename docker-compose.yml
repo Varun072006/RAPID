@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ── PostgreSQL ─────────────────────────────────────────────
   db:
@@ -54,8 +52,8 @@ services:
   # ── Next.js Dashboard ─────────────────────────────────────
   dashboard:
     build:
-      context: apps/dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
     ports:
       - "3000:3000"
     environment:

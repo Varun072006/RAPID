@@ -12,8 +12,6 @@ If any of these fail, the system has a serious correctness bug.
 
 from __future__ import annotations
 
-import pytest
-
 from packages.domain.payments.models import PaymentState
 from packages.domain.payments.state_machine import StateMachine
 from packages.domain.policy.engine import PolicyEngine

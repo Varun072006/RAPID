@@ -30,28 +30,28 @@ class ActionEvaluation:
     action: str
     recovery_prob: float
     expected_net_value: float  # in paise
-    cost: float                # in paise
-    friction_penalty: float    # in paise
-    risk_penalty: float        # in paise
-    gross_expected: float      # P × amount, before costs
+    cost: float  # in paise
+    friction_penalty: float  # in paise
+    risk_penalty: float  # in paise
+    gross_expected: float  # P × amount, before costs
 
 
 # Action cost parameters (in paise, adjustable per merchant)
 ACTION_PARAMS = {
     "retry_now": {
-        "cost": 5,           # API call cost + processing
-        "friction": 0.03,    # 3% friction (customer sees retry)
-        "risk": 0.02,        # 2% risk (could hit rate limits)
+        "cost": 5,  # API call cost + processing
+        "friction": 0.03,  # 3% friction (customer sees retry)
+        "risk": 0.02,  # 2% risk (could hit rate limits)
     },
     "retry_later": {
         "cost": 5,
-        "friction": 0.01,    # minimal friction (delayed, less visible)
-        "risk": 0.01,        # lower risk (state might have resolved)
+        "friction": 0.01,  # minimal friction (delayed, less visible)
+        "risk": 0.01,  # lower risk (state might have resolved)
     },
     "payment_link": {
-        "cost": 15,          # higher — SMS/email delivery cost
-        "friction": 0.12,    # 12% friction (customer must take action)
-        "risk": 0.00,        # no retry risk (fresh payment)
+        "cost": 15,  # higher — SMS/email delivery cost
+        "friction": 0.12,  # 12% friction (customer must take action)
+        "risk": 0.00,  # no retry risk (fresh payment)
     },
     "do_nothing": {
         "cost": 0,
@@ -122,8 +122,7 @@ class RevenueOptimizer:
             Tuple of (best_action_name, all_evaluations_sorted_by_env).
         """
         evaluations = [
-            self.evaluate_action(action, prob, amount)
-            for action, prob in recovery_probs.items()
+            self.evaluate_action(action, prob, amount) for action, prob in recovery_probs.items()
         ]
         evaluations.sort(key=lambda e: e.expected_net_value, reverse=True)
 

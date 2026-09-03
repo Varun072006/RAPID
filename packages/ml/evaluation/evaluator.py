@@ -16,9 +16,6 @@ Metrics:
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 from loguru import logger
@@ -33,18 +30,29 @@ class HeldOutEvaluator:
         self.test_df = test_df
 
     def _calculate_regret(self, chosen_actions: list[str]) -> tuple[float, float]:
-        """
-        Calculate total and mean decision regret (in INR) relative to true optimal potential outcome.
-        Regret = (Max possible value - Value achieved by chosen action)
+        """Calculate total and mean decision regret (in INR) relative to true optimal
+        potential outcome. Regret = (Max possible value - Value achieved by chosen action)
         """
         regrets = []
         for i, action in enumerate(chosen_actions):
             row = self.test_df.iloc[i]
             amount = row["amount"] / 100.0  # in INR
             outcomes = {
-                "retry_now": row["outcome_if_retry_now"] * amount if row["outcome_if_retry_now"] > self.SUCCESS_THRESHOLD else 0.0,
-                "retry_later": row["outcome_if_retry_later"] * amount if row["outcome_if_retry_later"] > self.SUCCESS_THRESHOLD else 0.0,
-                "payment_link": row["outcome_if_payment_link"] * amount if row["outcome_if_payment_link"] > self.SUCCESS_THRESHOLD else 0.0,
+                "retry_now": (
+                    row["outcome_if_retry_now"] * amount
+                    if row["outcome_if_retry_now"] > self.SUCCESS_THRESHOLD
+                    else 0.0
+                ),
+                "retry_later": (
+                    row["outcome_if_retry_later"] * amount
+                    if row["outcome_if_retry_later"] > self.SUCCESS_THRESHOLD
+                    else 0.0
+                ),
+                "payment_link": (
+                    row["outcome_if_payment_link"] * amount
+                    if row["outcome_if_payment_link"] > self.SUCCESS_THRESHOLD
+                    else 0.0
+                ),
             }
             max_val = max(outcomes.values())
             chosen_val = outcomes.get(action, 0.0)
@@ -121,16 +129,16 @@ class HeldOutEvaluator:
         feature_cols = model_bundle["feature_columns"]
 
         from packages.ml.features.engineering import ERROR_CODE_MAP
+
         df = self.test_df.copy()
         df["error_code"] = df["error_code"].map(ERROR_CODE_MAP).fillna(1)
 
         X = scaler.transform(df[feature_cols].values)
 
         all_actions = list(models.keys())
-        prob_matrix = np.column_stack([
-            models[action].predict_proba(X)[:, 1]
-            for action in all_actions
-        ])  # Shape: (N, num_actions)
+        prob_matrix = np.column_stack(
+            [models[action].predict_proba(X)[:, 1] for action in all_actions]
+        )  # Shape: (N, num_actions)
 
         best_action_indices = np.argmax(prob_matrix, axis=1)
         best_actions = [all_actions[idx] for idx in best_action_indices]

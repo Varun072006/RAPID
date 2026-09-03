@@ -20,9 +20,9 @@ from loguru import logger
 class SystemHealth(str, enum.Enum):
     """Current system health assessment."""
 
-    HEALTHY = "HEALTHY"     # < 5% failure rate — normal operation
-    DEGRADED = "DEGRADED"   # 5–15% failure rate — monitor closely
-    INCIDENT = "INCIDENT"   # > 15% failure rate — pause retries
+    HEALTHY = "HEALTHY"  # < 5% failure rate — normal operation
+    DEGRADED = "DEGRADED"  # 5–15% failure rate — monitor closely
+    INCIDENT = "INCIDENT"  # > 15% failure rate — pause retries
 
 
 # Thresholds (configurable)

@@ -8,19 +8,16 @@ Use this with the Failure Injection Lab in the dashboard.
 from __future__ import annotations
 
 import hashlib
-import json
 import random
 import string
-import time
-from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from apps.api.database import get_db
-from packages.domain.payments.models import Payment, PaymentState
 from packages.domain.payments.event_store import EventStore
+from packages.domain.payments.models import Payment, PaymentState
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
@@ -74,15 +71,25 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
         db.add(payment)
         db.commit()
 
-        store.append_event(payment_id, "payment_created", {
-            "scenario": "timeout",
-            "description": "API call timed out — state set to UNKNOWN",
-        }, actor="demo")
-        store.append_event(payment_id, "state_changed", {
-            "from": "CREATED",
-            "to": "UNKNOWN",
-            "reason": "API timeout during capture",
-        }, actor="demo")
+        store.append_event(
+            payment_id,
+            "payment_created",
+            {
+                "scenario": "timeout",
+                "description": "API call timed out — state set to UNKNOWN",
+            },
+            actor="demo",
+        )
+        store.append_event(
+            payment_id,
+            "state_changed",
+            {
+                "from": "CREATED",
+                "to": "UNKNOWN",
+                "reason": "API timeout during capture",
+            },
+            actor="demo",
+        )
 
         return {
             "scenario": "timeout",
@@ -108,10 +115,15 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
         db.add(payment)
         db.commit()
 
-        store.append_event(payment_id, "payment_failed", {
-            "scenario": "normal_recovery",
-            "error_code": "AUTHORIZATION_FAILED",
-        }, actor="demo")
+        store.append_event(
+            payment_id,
+            "payment_failed",
+            {
+                "scenario": "normal_recovery",
+                "error_code": "AUTHORIZATION_FAILED",
+            },
+            actor="demo",
+        )
 
         return {
             "scenario": "normal_recovery",
@@ -134,16 +146,31 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
         db.add(payment)
         db.commit()
 
-        store.append_event(payment_id, "adversarial_proposal", {
-            "agent_diagnosis": "Malicious LLM proposal attempting automatic retry of high ticket",
-            "recommended_action": "retry_now",
-            "amount_inr": 35000,
-        }, actor="llm_agent")
+        store.append_event(
+            payment_id,
+            "adversarial_proposal",
+            {
+                "agent_diagnosis": (
+                    "Malicious LLM proposal attempting automatic retry of high ticket"
+                ),
+                "recommended_action": "retry_now",
+                "amount_inr": 35000,
+            },
+            actor="llm_agent",
+        )
 
-        store.append_event(payment_id, "policy_checked", {
-            "authorized": False,
-            "reason": "DENIED: Amount ₹35000.00 exceeds automatic limit ₹25000.00. Requires human review.",
-        }, actor="policy_engine")
+        store.append_event(
+            payment_id,
+            "policy_checked",
+            {
+                "authorized": False,
+                "reason": (
+                    "DENIED: Amount ₹35000.00 exceeds automatic limit ₹25000.00."
+                    " Requires human review."
+                ),
+            },
+            actor="policy_engine",
+        )
 
         return {
             "scenario": "adversarial_llm",
@@ -151,8 +178,9 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
             "state": "FAILED",
             "authorized": False,
             "description": (
-                "Adversarial LLM attack injected: Proposed automatic retry for ₹35,000 transaction. "
-                "Policy Engine blocked execution. Unsafe Autonomy Rate: 0.0%."
+                "Adversarial LLM attack injected: Proposed automatic retry for"
+                " ₹35,000 transaction. Policy Engine blocked execution. Unsafe"
+                " Autonomy Rate: 0.0%."
             ),
         }
 
@@ -199,11 +227,16 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
         db.commit()
 
         fake_event_id = f"evt_demo_{hashlib.md5(payment_id.encode()).hexdigest()[:8]}"
-        store.append_event(payment_id, "webhook_received", {
-            "scenario": "duplicate_webhook",
-            "event_id": fake_event_id,
-            "note": "First occurrence — processed",
-        }, actor="demo")
+        store.append_event(
+            payment_id,
+            "webhook_received",
+            {
+                "scenario": "duplicate_webhook",
+                "event_id": fake_event_id,
+                "note": "First occurrence — processed",
+            },
+            actor="demo",
+        )
 
         return {
             "scenario": "duplicate_webhook",
@@ -228,16 +261,26 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
         db.add(payment)
         db.commit()
 
-        store.append_event(payment_id, "state_changed", {
-            "scenario": "out_of_order",
-            "from": "CREATED",
-            "to": "CAPTURED",
-            "note": "Out-of-order: captured arrived before failed",
-        }, actor="demo")
-        store.append_event(payment_id, "stale_event_discarded", {
-            "attempted_transition": "CAPTURED → FAILED",
-            "reason": "Invalid transition — stale webhook ignored",
-        }, actor="state_machine")
+        store.append_event(
+            payment_id,
+            "state_changed",
+            {
+                "scenario": "out_of_order",
+                "from": "CREATED",
+                "to": "CAPTURED",
+                "note": "Out-of-order: captured arrived before failed",
+            },
+            actor="demo",
+        )
+        store.append_event(
+            payment_id,
+            "stale_event_discarded",
+            {
+                "attempted_transition": "CAPTURED → FAILED",
+                "reason": "Invalid transition — stale webhook ignored",
+            },
+            actor="state_machine",
+        )
 
         return {
             "scenario": "out_of_order",

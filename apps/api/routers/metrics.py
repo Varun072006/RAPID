@@ -18,19 +18,11 @@ def get_metrics_summary(db: Session = Depends(get_db)) -> dict:
     Computed fresh from DB on each request (suitable for prototype).
     """
     total_payments = db.query(Payment).count()
-    failed_payments = (
-        db.query(Payment).filter(Payment.state == PaymentState.FAILED).count()
-    )
-    unknown_payments = (
-        db.query(Payment).filter(Payment.state == PaymentState.UNKNOWN).count()
-    )
-    captured_payments = (
-        db.query(Payment).filter(Payment.state == PaymentState.CAPTURED).count()
-    )
+    failed_payments = db.query(Payment).filter(Payment.state == PaymentState.FAILED).count()
+    unknown_payments = db.query(Payment).filter(Payment.state == PaymentState.UNKNOWN).count()
+    captured_payments = db.query(Payment).filter(Payment.state == PaymentState.CAPTURED).count()
     link_sent_payments = (
-        db.query(Payment)
-        .filter(Payment.state == PaymentState.PAYMENT_LINK_SENT)
-        .count()
+        db.query(Payment).filter(Payment.state == PaymentState.PAYMENT_LINK_SENT).count()
     )
 
     # Revenue at risk: sum of failed + unknown payment amounts
@@ -41,15 +33,9 @@ def get_metrics_summary(db: Session = Depends(get_db)) -> dict:
     )
     revenue_at_risk = sum(p.amount for p in at_risk_payments)
 
-    # Recovered: sum of captured payments that had recovery decisions
-    recovered_decisions = (
-        db.query(RecoveryDecision).filter(RecoveryDecision.executed == True).all()
-    )
     total_decisions = db.query(RecoveryDecision).count()
     policy_denied = (
-        db.query(RecoveryDecision)
-        .filter(RecoveryDecision.policy_authorized == False)
-        .count()
+        db.query(RecoveryDecision).filter(RecoveryDecision.policy_authorized.is_(False)).count()
     )
 
     # Recovery rate approximation

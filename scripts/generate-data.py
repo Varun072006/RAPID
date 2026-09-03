@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate 100K synthetic payment scenarios."""
+
 from packages.ml.simulation.scenario_generator import ScenarioGenerator
 
 if __name__ == "__main__":

@@ -13,12 +13,14 @@ from packages.domain.policy.engine import MerchantPolicy, PolicyEngine
 
 @pytest.fixture
 def engine() -> PolicyEngine:
-    return PolicyEngine(MerchantPolicy(
-        max_auto_amount=25_000_00,
-        max_retries=2,
-        min_recovery_confidence=0.55,
-        high_value_threshold=5_000_00,
-    ))
+    return PolicyEngine(
+        MerchantPolicy(
+            max_auto_amount=25_000_00,
+            max_retries=2,
+            min_recovery_confidence=0.55,
+            high_value_threshold=5_000_00,
+        )
+    )
 
 
 class TestRule1UnknownStateGuard:

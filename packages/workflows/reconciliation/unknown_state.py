@@ -120,9 +120,7 @@ class UnknownStateResolver:
             }
 
         elif true_state == ReconciliationOutcome.FAILED:
-            logger.info(
-                f"Reconciliation: {payment_id} confirmed FAILED. Safe to recover."
-            )
+            logger.info(f"Reconciliation: {payment_id} confirmed FAILED. Safe to recover.")
             return {
                 "outcome": "CONFIRMED_FAILED",
                 "message": (
@@ -175,16 +173,10 @@ class UnknownStateResolver:
         """Reconcile and apply the state update to the database."""
         result = self.handle_timeout(payment_id, razorpay_payment_id)
 
-        payment = (
-            self.db.query(Payment)
-            .filter(Payment.payment_id == payment_id)
-            .first()
-        )
+        payment = self.db.query(Payment).filter(Payment.payment_id == payment_id).first()
         if payment:
             payment.state = result["next_state"]
             self.db.commit()
-            logger.info(
-                f"Reconciliation applied: {payment_id} → {result['next_state'].value}"
-            )
+            logger.info(f"Reconciliation applied: {payment_id} → {result['next_state'].value}")
 
         return result

@@ -33,12 +33,12 @@ class HiddenFactors:
     All values are in [0, 1] where 1 is the best possible state.
     """
 
-    issuer_health: float       # 0=full incident, 1=fully healthy
-    network_quality: float     # 0=severe packet loss, 1=perfect
+    issuer_health: float  # 0=full incident, 1=fully healthy
+    network_quality: float  # 0=severe packet loss, 1=perfect
     customer_liquidity: float  # 0=insufficient funds, 1=ample funds
-    customer_intent: float     # 0=likely fraud/abandon, 1=genuine buyer
-    payment_persistence: float # 0=will abandon on friction, 1=will retry
-    system_load: float         # 0=overloaded, 1=normal load
+    customer_intent: float  # 0=likely fraud/abandon, 1=genuine buyer
+    payment_persistence: float  # 0=will abandon on friction, 1=will retry
+    system_load: float  # 0=overloaded, 1=normal load
 
 
 class CausalPaymentModel:
@@ -67,12 +67,12 @@ class CausalPaymentModel:
           (e.g., most issuers are healthy most of the time)
         """
         return HiddenFactors(
-            issuer_health=float(self.rng.beta(8, 2)),       # mostly healthy
-            network_quality=float(self.rng.beta(7, 2)),     # mostly good
+            issuer_health=float(self.rng.beta(8, 2)),  # mostly healthy
+            network_quality=float(self.rng.beta(7, 2)),  # mostly good
             customer_liquidity=float(self.rng.beta(7, 2)),  # mostly funded
-            customer_intent=float(self.rng.beta(8, 1.5)),   # mostly genuine
-            payment_persistence=float(self.rng.beta(6, 3)), # moderately persistent
-            system_load=float(self.rng.beta(8, 2)),         # mostly normal
+            customer_intent=float(self.rng.beta(8, 1.5)),  # mostly genuine
+            payment_persistence=float(self.rng.beta(6, 3)),  # moderately persistent
+            system_load=float(self.rng.beta(8, 2)),  # mostly normal
         )
 
     def outcome_if_retry_now(
@@ -89,9 +89,9 @@ class CausalPaymentModel:
         base = 0.85
         prob = (
             base
-            * hidden.issuer_health        # issuer must be healthy
-            * hidden.network_quality      # network must be good
-            * hidden.customer_liquidity   # customer must have funds
+            * hidden.issuer_health  # issuer must be healthy
+            * hidden.network_quality  # network must be good
+            * hidden.customer_liquidity  # customer must have funds
         )
         # Retry fatigue: each additional retry reduces probability
         fatigue = max(0.0, 1.0 - customer_retry_count * 0.25)
@@ -110,12 +110,7 @@ class CausalPaymentModel:
         to resolve. Customer/system state may improve. Less fatigue.
         """
         base = 0.90  # higher base — time helps
-        prob = (
-            base
-            * hidden.issuer_health
-            * hidden.customer_liquidity
-            * hidden.customer_intent
-        )
+        prob = base * hidden.issuer_health * hidden.customer_liquidity * hidden.customer_intent
         # Less fatigue than immediate retry
         fatigue = max(0.0, 1.0 - customer_retry_count * 0.10)
         prob *= fatigue
@@ -134,16 +129,11 @@ class CausalPaymentModel:
         """
         base = 0.88
         prob = (
-            base
-            * hidden.customer_intent
-            * hidden.payment_persistence
-            * hidden.customer_liquidity
+            base * hidden.customer_intent * hidden.payment_persistence * hidden.customer_liquidity
         )
         return float(np.clip(prob, 0.0, 1.0))
 
-    def generate_observable_features(
-        self, hidden: HiddenFactors
-    ) -> dict[str, float | int | str]:
+    def generate_observable_features(self, hidden: HiddenFactors) -> dict[str, float | int | str]:
         """
         Map hidden causal factors → observable features.
 
@@ -175,9 +165,7 @@ class CausalPaymentModel:
             error_code = "SUCCESS"
 
         # Customer history features (derived from intent + persistence)
-        customer_days_active = int(
-            max(1, 100 * hidden.customer_intent + self.rng.normal(0, 20))
-        )
+        customer_days_active = int(max(1, 100 * hidden.customer_intent + self.rng.normal(0, 20)))
         customer_success_rate = float(
             np.clip(hidden.customer_intent * 0.9 + 0.05 + self.rng.normal(0, 0.05), 0, 1)
         )

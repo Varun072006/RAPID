@@ -10,8 +10,6 @@ Design principles:
 
 from __future__ import annotations
 
-from typing import FrozenSet
-
 from packages.domain.payments.models import PaymentState
 
 
@@ -33,7 +31,7 @@ class StateMachine:
     """
 
     # Map: from_state → set of allowed to_states
-    VALID_TRANSITIONS: dict[PaymentState, FrozenSet[PaymentState]] = {
+    VALID_TRANSITIONS: dict[PaymentState, frozenset[PaymentState]] = {
         PaymentState.CREATED: frozenset(
             {
                 PaymentState.AUTHORIZED,

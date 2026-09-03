@@ -144,7 +144,6 @@ class ScenarioGenerator:
         path = Path(data_dir) / f"{split}.parquet"
         if not path.exists():
             raise FileNotFoundError(
-                f"Split '{split}' not found at {path}. "
-                f"Run: python scripts/generate-data.py"
+                f"Split '{split}' not found at {path}. " f"Run: python scripts/generate-data.py"
             )
         return pd.read_parquet(path)

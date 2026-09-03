@@ -7,8 +7,7 @@ not just the cases we thought of.
 
 from __future__ import annotations
 
-import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from packages.domain.payments.models import PaymentState
@@ -52,9 +51,13 @@ class TestStateMachineProperties:
 
 class TestIdempotencyProperties:
     @given(
-        payment_id=st.text(min_size=1, max_size=64, alphabet=st.characters(whitelist_categories=('L', 'N', 'P'))),
+        payment_id=st.text(
+            min_size=1, max_size=64, alphabet=st.characters(whitelist_categories=("L", "N", "P"))
+        ),
         action=st.sampled_from(["retry_now", "retry_later", "payment_link"]),
-        merchant_id=st.text(min_size=1, max_size=64, alphabet=st.characters(whitelist_categories=('L', 'N'))),
+        merchant_id=st.text(
+            min_size=1, max_size=64, alphabet=st.characters(whitelist_categories=("L", "N"))
+        ),
     )
     def test_same_inputs_same_key(self, payment_id, action, merchant_id):
         """Idempotency key is deterministic — same inputs → same key."""
@@ -76,11 +79,13 @@ class TestIdempotencyProperties:
 
 class TestOptimizerProperties:
     @given(
-        probs=st.fixed_dictionaries({
-            "retry_now": st.floats(min_value=0.0, max_value=1.0),
-            "retry_later": st.floats(min_value=0.0, max_value=1.0),
-            "payment_link": st.floats(min_value=0.0, max_value=1.0),
-        }),
+        probs=st.fixed_dictionaries(
+            {
+                "retry_now": st.floats(min_value=0.0, max_value=1.0),
+                "retry_later": st.floats(min_value=0.0, max_value=1.0),
+                "payment_link": st.floats(min_value=0.0, max_value=1.0),
+            }
+        ),
         amount=st.integers(min_value=0, max_value=10_000_00),
     )
     def test_best_action_has_max_env(self, probs, amount):

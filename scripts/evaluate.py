@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run full evaluation — baselines + RAPID + distribution shift."""
+
 import json
 import pickle
 from pathlib import Path

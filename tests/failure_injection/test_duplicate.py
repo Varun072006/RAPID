@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from packages.domain.payments.deduplicator import Deduplicator
 from packages.domain.payments.event_store import EventStore
 
@@ -32,23 +30,29 @@ class TestDuplicateWebhook:
         event_id = "evt_003"
 
         # First: process normally
-        store.append_event(failed_payment.payment_id, "webhook_received", {
-            "event_id": event_id,
-        })
+        store.append_event(
+            failed_payment.payment_id,
+            "webhook_received",
+            {
+                "event_id": event_id,
+            },
+        )
         dedup.mark_processed(event_id, "payment.failed", {})
 
         # Second: duplicate — dedup catches it before audit event is created
         is_dup = dedup.is_duplicate(event_id)
         if not is_dup:
-            store.append_event(failed_payment.payment_id, "webhook_received", {
-                "event_id": event_id,
-                "duplicate": True,
-            })
+            store.append_event(
+                failed_payment.payment_id,
+                "webhook_received",
+                {
+                    "event_id": event_id,
+                    "duplicate": True,
+                },
+            )
 
         # Verify: only one non-duplicate event for this event_id
-        timeline = store.get_events_by_type(
-            failed_payment.payment_id, "webhook_received"
-        )
+        timeline = store.get_events_by_type(failed_payment.payment_id, "webhook_received")
         # At most 2 events (original + possible duplicate marker)
         assert len(timeline) <= 2
 

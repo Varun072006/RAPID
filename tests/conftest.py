@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from packages.domain.payments.models import Base, Payment, PaymentState
 from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
@@ -32,6 +32,7 @@ def db() -> Session:
     finally:
         session.close()
         Base.metadata.drop_all(engine)
+        engine.dispose()
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@
 ## Links
 
 - **GitHub**: https://github.com/Varun072006/rapid-payment-recovery
-- **Pitch Video**: [YouTube link — add before submission]
+- **Pitch Video**: *(Link to be updated prior to submission)*
 - **Live Demo**: `docker-compose up` → http://localhost:3000
 
 ---

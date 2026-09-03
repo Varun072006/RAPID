@@ -3,8 +3,14 @@
 RAPID demo script — 3 scenarios.
 Run: python scripts/demo.py (with API server running on localhost:8000)
 """
-import json
+
+import sys
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 import requests
 
@@ -38,7 +44,7 @@ def demo_normal_recovery():
     payment_id = scenario["payment_id"]
 
     print(f"\n1. Payment failed: {payment_id}")
-    print(f"   Amount: ₹750 | Method: UPI | State: FAILED")
+    print("   Amount: ₹750 | Method: UPI | State: FAILED")
 
     try:
         r2 = requests.post(f"{API}/api/recovery/process", params={"payment_id": payment_id})
@@ -48,14 +54,14 @@ def demo_normal_recovery():
             print("   (Models not trained yet — run: make data && make train)")
             return
 
-        print(f"\n2. RAPID analyzed recovery options:")
+        print("\n2. RAPID analyzed recovery options:")
         for action, prob in result.get("predictions", {}).items():
             print(f"   {action}: {prob:.0%}")
 
         print(f"\n3. Best action selected: {result.get('action')}")
         print(f"   Expected value: ₹{result.get('expected_value_inr', 0):.2f}")
         print(f"   Policy: {result.get('policy_reason')}")
-        print(f"\n4. Agent diagnosis:")
+        print("\n4. Agent diagnosis:")
         proposal = result.get("agent_proposal", {})
         print(f"   {proposal.get('diagnosis', 'N/A')}")
         print(f"   Reason: {proposal.get('reason', 'N/A')}")
@@ -69,22 +75,22 @@ def demo_timeout_reconciliation():
     r = requests.post(f"{API}/api/demo/inject", json={"scenario_type": "timeout"})
     scenario = r.json()
 
-    print(f"\n1. API timeout during capture")
+    print("\n1. API timeout during capture")
     print(f"   Payment: {scenario['payment_id']}")
-    print(f"   State: UNKNOWN (not FAILED)")
+    print("   State: UNKNOWN (not FAILED)")
 
-    print(f"\n2. Policy ENGINE blocks all retries")
-    print(f"   Rule: 'Cannot retry UNKNOWN state'")
-    print(f"   Risk prevented: double-charge ✓")
+    print("\n2. Policy ENGINE blocks all retries")
+    print("   Rule: 'Cannot retry UNKNOWN state'")
+    print("   Risk prevented: double-charge ✓")
 
-    print(f"\n3. Reconciliation queries Razorpay mock...")
-    print(f"   GET /payments/{{razorpay_id}}")
-    print(f"   (In mock mode: deterministic simulated response)")
+    print("\n3. Reconciliation queries Razorpay mock...")
+    print("   GET /payments/{razorpay_id}")
+    print("   (In mock mode: deterministic simulated response)")
 
-    print(f"\n4. Resolution:")
-    print(f"   → If mock says 'captured': state = CAPTURED, NO retry")
-    print(f"   → If mock says 'failed': state = FAILED, SAFE to recover")
-    print(f"   → If mock says 'pending': state = PENDING, WAIT for webhook")
+    print("\n4. Resolution:")
+    print("   → If mock says 'captured': state = CAPTURED, NO retry")
+    print("   → If mock says 'failed': state = FAILED, SAFE to recover")
+    print("   → If mock says 'pending': state = PENDING, WAIT for webhook")
 
 
 def demo_bank_degradation():
@@ -93,15 +99,15 @@ def demo_bank_degradation():
     scenario = r.json()
 
     print(f"\n1. {scenario['payments_created']} failures injected (AXIS bank)")
-    print(f"   Failure rate: >15% → INCIDENT threshold crossed")
+    print("   Failure rate: >15% → INCIDENT threshold crossed")
 
-    print(f"\n2. Health detector triggers:")
-    print(f"   Status: INCIDENT")
-    print(f"   Automatic retries: PAUSED")
+    print("\n2. Health detector triggers:")
+    print("   Status: INCIDENT")
+    print("   Automatic retries: PAUSED")
 
-    print(f"\n3. All retry actions BLOCKED by policy (Rule 5)")
-    print(f"   Payment links: still allowed (don't stress banking network)")
-    print(f"   Human review: recommended")
+    print("\n3. All retry actions BLOCKED by policy (Rule 5)")
+    print("   Payment links: still allowed (don't stress banking network)")
+    print("   Human review: recommended")
 
 
 def demo_duplicate_webhook():
@@ -110,15 +116,15 @@ def demo_duplicate_webhook():
     scenario = r.json()
 
     print(f"\n1. First webhook processed: {scenario['event_id']}")
-    print(f"   → Stored in deduplication table")
-    print(f"   → State machine applied")
-    print(f"   → Audit event recorded")
+    print("   → Stored in deduplication table")
+    print("   → State machine applied")
+    print("   → Audit event recorded")
 
-    print(f"\n2. Same webhook arrives again (Razorpay retry)")
+    print("\n2. Same webhook arrives again (Razorpay retry)")
     print(f"   → Deduplicator: is_duplicate('{scenario['event_id']}') = True")
-    print(f"   → Return: {{status: 'deduplicated'}} to Razorpay")
-    print(f"   → No state change. No duplicate audit event.")
-    print(f"\n[OK] Zero duplicate processing")
+    print("   → Return: {status: 'deduplicated'} to Razorpay")
+    print("   → No state change. No duplicate audit event.")
+    print("\n[OK] Zero duplicate processing")
 
 
 def main():

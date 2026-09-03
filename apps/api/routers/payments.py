@@ -122,9 +122,11 @@ def process_recovery(payment_id: str, db: Session = Depends(get_db)) -> dict:
 
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
+
         razorpay = MockRazorpayAdapter()
     else:
         from packages.integrations.razorpay.adapter import RazorpayAdapter
+
         razorpay = RazorpayAdapter(
             settings.razorpay_key_id,
             settings.razorpay_key_secret,

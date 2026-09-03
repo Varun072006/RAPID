@@ -24,12 +24,12 @@ from typing import Any
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from packages.domain.payments.models import Payment, PaymentState, RecoveryDecision, RecoveryAction
+from packages.domain.payments.models import Payment, PaymentState, RecoveryAction, RecoveryDecision
+from packages.domain.policy.engine import PolicyEngine
 from packages.domain.recovery.optimizer import RevenueOptimizer
 from packages.domain.recovery.system_health import HealthDetector
-from packages.domain.policy.engine import PolicyEngine
 from packages.integrations.razorpay.adapter import RazorpayAdapter
-from packages.ml.features.engineering import ERROR_CODE_MAP, FEATURE_COLUMNS, extract_features
+from packages.ml.features.engineering import ERROR_CODE_MAP, FEATURE_COLUMNS
 from packages.utils.audit import AuditLogger
 from packages.utils.idempotency import IdempotencyKeyGenerator
 from packages.workflows.recovery.agent import RecoveryAgent
@@ -43,9 +43,7 @@ def _load_models() -> tuple[Any, Any]:
     recovery_path = MODEL_DIR / "recovery_models.pkl"
 
     if not failure_path.exists() or not recovery_path.exists():
-        raise FileNotFoundError(
-            "ML models not found. Run: make data && make train"
-        )
+        raise FileNotFoundError("ML models not found. Run: make data && make train")
 
     with open(failure_path, "rb") as f:
         failure_clf = pickle.load(f)
@@ -95,9 +93,7 @@ class RecoveryOrchestrator:
         proba = max(self._failure_clf.predict_proba(feature_vec)[0])
         return mode, float(proba)
 
-    def _predict_recovery_probs(
-        self, features_dict: dict
-    ) -> dict[str, float]:
+    def _predict_recovery_probs(self, features_dict: dict) -> dict[str, float]:
         """Predict P(success) for each recovery action."""
         scaler = self._recovery_bundle["scaler"]
         models = self._recovery_bundle["models"]
@@ -106,8 +102,7 @@ class RecoveryOrchestrator:
         scaled = scaler.transform(feature_vec)
 
         return {
-            action: float(model.predict_proba(scaled)[0][1])
-            for action, model in models.items()
+            action: float(model.predict_proba(scaled)[0][1]) for action, model in models.items()
         }
 
     def process_failed_payment(self, payment_id: str) -> dict:
@@ -119,11 +114,7 @@ class RecoveryOrchestrator:
         self._ensure_models()
 
         # ── Step 1: Load payment ──────────────────────────────────────────
-        payment = (
-            self.db.query(Payment)
-            .filter(Payment.payment_id == payment_id)
-            .first()
-        )
+        payment = self.db.query(Payment).filter(Payment.payment_id == payment_id).first()
 
         if not payment:
             return {"error": f"Payment {payment_id} not found", "success": False}
@@ -131,7 +122,7 @@ class RecoveryOrchestrator:
         if payment.state not in (PaymentState.FAILED, PaymentState.UNKNOWN):
             return {
                 "error": f"Payment {payment_id} is in state {payment.state.value}, "
-                         f"expected FAILED or UNKNOWN",
+                f"expected FAILED or UNKNOWN",
                 "success": False,
             }
 
@@ -146,18 +137,17 @@ class RecoveryOrchestrator:
             "amount": payment.amount,
             "payment_method": payment.payment_method or "card",
             "bank": payment.bank or "0",
-            "latency_ms": 500,            # default; real system reads from logs
+            "latency_ms": 500,  # default; real system reads from logs
             "error_code": "AUTHORIZATION_FAILED",
             "customer_days_active": 30,
             "customer_success_rate": 0.7,
             "customer_churn_risk": 0.3,
         }
         # Encode error_code
-        payment_dict["error_code"] = ERROR_CODE_MAP.get(
-            str(payment_dict["error_code"]), 1
-        )
+        payment_dict["error_code"] = ERROR_CODE_MAP.get(str(payment_dict["error_code"]), 1)
         # Encode payment_method
         from packages.ml.features.engineering import PAYMENT_METHOD_MAP
+
         payment_dict["payment_method"] = PAYMENT_METHOD_MAP.get(
             str(payment_dict["payment_method"]), 0
         )
@@ -169,9 +159,7 @@ class RecoveryOrchestrator:
         # ── Step 3: Classify failure mode ─────────────────────────────────
         failure_mode, failure_confidence = self._predict_failure_mode(payment_dict)
         self.audit.failure_classified(payment_id, failure_mode, failure_confidence)
-        logger.info(
-            f"Failure classified: {failure_mode} ({failure_confidence:.0%} confidence)"
-        )
+        logger.info(f"Failure classified: {failure_mode} ({failure_confidence:.0%} confidence)")
 
         # ── Step 4: Predict recovery probabilities ────────────────────────
         recovery_probs = self._predict_recovery_probs(payment_dict)
@@ -179,9 +167,7 @@ class RecoveryOrchestrator:
         logger.info(f"Recovery predictions: {recovery_probs}")
 
         # ── Step 5: Revenue optimizer ─────────────────────────────────────
-        best_action, all_evals = self.optimizer.select_best_action(
-            recovery_probs, payment.amount
-        )
+        best_action, all_evals = self.optimizer.select_best_action(recovery_probs, payment.amount)
         best_eval = next(e for e in all_evals if e.action == best_action)
         self.audit.action_selected(
             payment_id,
@@ -206,9 +192,7 @@ class RecoveryOrchestrator:
             "failure_mode": failure_mode,
             "retry_count": payment.retry_count,
         }
-        agent_proposal = self.agent.propose_recovery(
-            payment_context, recovery_probs
-        )
+        agent_proposal = self.agent.propose_recovery(payment_context, recovery_probs)
 
         # ── Step 7: Policy check ──────────────────────────────────────────
         system_healthy = not self.health_detector.should_pause_retries()
@@ -284,9 +268,7 @@ class RecoveryOrchestrator:
             payment.retry_count += 1
             self.db.commit()
 
-            self.audit.action_executed(
-                payment_id, best_action, idempotency_key, execution_result
-            )
+            self.audit.action_executed(payment_id, best_action, idempotency_key, execution_result)
 
         except Exception as exc:
             logger.error(f"Execution failed for {payment_id}: {exc}")
@@ -315,10 +297,7 @@ class RecoveryOrchestrator:
         self.db.add(decision)
         self.db.commit()
 
-        logger.info(
-            f"Recovery complete: {payment_id} → {best_action} "
-            f"executed={executed}"
-        )
+        logger.info(f"Recovery complete: {payment_id} → {best_action} " f"executed={executed}")
 
         return {
             "payment_id": payment_id,

@@ -34,7 +34,7 @@ class PaymentEvent:
     timestamp: datetime
     data: dict[str, Any]
 
-    def __lt__(self, other: "PaymentEvent") -> bool:
+    def __lt__(self, other: PaymentEvent) -> bool:
         """Events are ordered by timestamp for chronological replay."""
         return self.timestamp < other.timestamp
 

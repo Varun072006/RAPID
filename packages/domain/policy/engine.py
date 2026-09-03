@@ -32,11 +32,11 @@ class MerchantPolicy:
     For the buildathon, a single global policy is used.
     """
 
-    max_auto_amount: int = 25_000_00     # ₹25,000 in paise
-    max_retries: int = 2                 # per payment
+    max_auto_amount: int = 25_000_00  # ₹25,000 in paise
+    max_retries: int = 2  # per payment
     min_recovery_confidence: float = 0.55
-    high_value_threshold: int = 5_000_00 # ₹5,000 — apply stricter checks
-    unknown_state_retry: bool = False    # MUST remain False
+    high_value_threshold: int = 5_000_00  # ₹5,000 — apply stricter checks
+    unknown_state_retry: bool = False  # MUST remain False
 
 
 # Default policy (override per merchant)
@@ -61,7 +61,7 @@ class PolicyEngine:
     def authorize_action(
         self,
         action: str,
-        amount: int,               # in paise
+        amount: int,  # in paise
         recovery_confidence: float,
         current_state: str,
         retry_count: int,
@@ -112,10 +112,7 @@ class PolicyEngine:
 
         # ── Rule 4: Confidence gate (high-value only) ─────────────────────
         is_high_value = amount >= self.policy.high_value_threshold
-        if (
-            is_high_value
-            and recovery_confidence < self.policy.min_recovery_confidence
-        ):
+        if is_high_value and recovery_confidence < self.policy.min_recovery_confidence:
             reason = (
                 f"DENIED: Low confidence ({recovery_confidence:.0%}) "
                 f"on high-value payment (₹{amount/100:.2f}). "

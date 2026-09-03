@@ -5,7 +5,7 @@ Database setup — SQLAlchemy engine + session factory.
 from __future__ import annotations
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from apps.api.config import get_settings
 from packages.domain.payments.models import Base
@@ -28,11 +28,12 @@ def get_engine():
                 max_overflow=20,
             )
             # Test connection
-            with engine.connect() as conn:
+            with engine.connect():
                 pass
             return engine
     except Exception as exc:
         from loguru import logger
+
         logger.warning(
             f"PostgreSQL connection failed ({exc}). "
             "Falling back to local SQLite database (rapid.db)."

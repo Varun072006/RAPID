@@ -44,24 +44,19 @@ def evaluate_calibration(
 
     # Expected Calibration Error (ECE): weighted mean |predicted - actual|
     bin_sizes = np.histogram(y_pred_proba, bins=n_bins, range=(0, 1))[0]
-    ece = float(
-        np.sum(
-            np.abs(prob_true - prob_pred) * bin_sizes[: len(prob_true)]
-        )
-        / len(y_true)
-    )
+    ece = float(np.sum(np.abs(prob_true - prob_pred) * bin_sizes[: len(prob_true)]) / len(y_true))
 
     max_err = float(np.max(np.abs(prob_true - prob_pred))) if len(prob_true) > 0 else 0.0
 
     quality = (
-        "excellent" if brier < 0.10 else
-        "good" if brier < 0.20 else
-        "acceptable" if brier < 0.25 else
-        "poor"
+        "excellent"
+        if brier < 0.10
+        else "good" if brier < 0.20 else "acceptable" if brier < 0.25 else "poor"
     )
 
     label = f"[{action_name}] " if action_name else ""
     from loguru import logger
+
     logger.info(
         f"{label}Calibration: Brier={brier:.4f} ECE={ece:.4f} "
         f"MaxErr={max_err:.4f} Quality={quality}"

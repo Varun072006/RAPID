@@ -21,9 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import random
 import time
-from datetime import datetime, timezone
 from typing import Any
 
 from loguru import logger
@@ -87,9 +85,7 @@ class MockRazorpayAdapter:
         else:
             status = "created"
 
-        logger.debug(
-            f"[MOCK] fetch_payment({razorpay_payment_id}) → status={status}"
-        )
+        logger.debug(f"[MOCK] fetch_payment({razorpay_payment_id}) → status={status}")
 
         return {
             "id": razorpay_payment_id,

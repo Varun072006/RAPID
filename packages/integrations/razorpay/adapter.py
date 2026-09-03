@@ -91,14 +91,10 @@ class RazorpayAdapter:
             )
             response.raise_for_status()
             data = response.json()
-            logger.debug(
-                f"Fetched payment {razorpay_payment_id}: status={data.get('status')}"
-            )
+            logger.debug(f"Fetched payment {razorpay_payment_id}: status={data.get('status')}")
             return data
         except requests.Timeout:
-            logger.error(
-                f"Timeout fetching payment {razorpay_payment_id} from Razorpay"
-            )
+            logger.error(f"Timeout fetching payment {razorpay_payment_id} from Razorpay")
             raise
         except requests.HTTPError as exc:
             logger.error(f"Razorpay API error for {razorpay_payment_id}: {exc}")

@@ -50,3 +50,12 @@ Thumbs.db
 
 # ── Docs ──────────────────────────────────────────────────────
 site/
+
+# ── Generated Output & Database Artifacts ─────────────────────
+rapid.db
+benchmark_results.csv
+evaluation_results.json
+model_metrics.json
+test_results.json
+14_REPOSITORY_TREE.txt
+

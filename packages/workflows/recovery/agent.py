@@ -71,9 +71,7 @@ You must respond ONLY with valid JSON (no markdown, no extra text):
         provider: str | None = None,
     ) -> None:
         self.model = model or os.getenv("LLM_MODEL", "qwen3:8b")
-        self.ollama_host = ollama_host or os.getenv(
-            "OLLAMA_HOST", "http://localhost:11434"
-        )
+        self.ollama_host = ollama_host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
         self.provider = provider or os.getenv("LLM_PROVIDER", "mock")
 
     def _call_ollama(self, prompt: str) -> str:

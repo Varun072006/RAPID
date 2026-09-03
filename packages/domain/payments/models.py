@@ -109,9 +109,7 @@ class Payment(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def __repr__(self) -> str:
         return f"<Payment {self.payment_id} state={self.state} amount={self.amount}>"

@@ -21,7 +21,6 @@ import pandas as pd
 from loguru import logger
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import classification_report
-from sklearn.preprocessing import LabelEncoder
 
 from packages.ml.features.engineering import FEATURE_COLUMNS
 from packages.ml.simulation.scenario_generator import ScenarioGenerator
@@ -66,6 +65,7 @@ def train(
 
     # Encode error_code (string) to int
     from packages.ml.features.engineering import ERROR_CODE_MAP
+
     for df in [train_df, val_df]:
         df["error_code"] = df["error_code"].map(ERROR_CODE_MAP).fillna(1)
 
@@ -88,10 +88,7 @@ def train(
     clf.fit(X_train, y_train)
 
     val_preds = clf.predict(X_val)
-    logger.info(
-        f"Validation results:\n"
-        f"{classification_report(y_val, val_preds)}"
-    )
+    logger.info(f"Validation results:\n" f"{classification_report(y_val, val_preds)}")
 
     # Save model
     output_path = Path(output_dir) / "failure_classifier.pkl"

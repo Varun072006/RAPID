@@ -72,9 +72,7 @@ class EventStore:
             data=data,
         )
 
-        logger.debug(
-            f"Event appended: payment={payment_id} type={event_type} actor={actor}"
-        )
+        logger.debug(f"Event appended: payment={payment_id} type={event_type} actor={actor}")
         return event
 
     def get_timeline(self, payment_id: str) -> list[PaymentEvent]:
@@ -101,10 +99,6 @@ class EventStore:
             for row in rows
         ]
 
-    def get_events_by_type(
-        self, payment_id: str, event_type: str
-    ) -> list[PaymentEvent]:
+    def get_events_by_type(self, payment_id: str, event_type: str) -> list[PaymentEvent]:
         """Filter timeline to a specific event type."""
-        return [
-            e for e in self.get_timeline(payment_id) if e.event_type == event_type
-        ]
+        return [e for e in self.get_timeline(payment_id) if e.event_type == event_type]

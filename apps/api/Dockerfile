@@ -5,15 +5,13 @@ WORKDIR /app
 # Install uv
 RUN pip install uv
 
-# Copy dependency files
-COPY pyproject.toml .
-
-# Install dependencies
-RUN uv pip install --system --no-cache -e .
-
-# Copy source
+# Copy manifest and source files needed for package installation
+COPY pyproject.toml README.md ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
+
+# Install dependencies and rapid package
+RUN uv pip install --system --no-cache -e .
 
 EXPOSE 8000
 

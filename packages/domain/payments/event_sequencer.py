@@ -54,16 +54,11 @@ class EventSequencer:
             (True, "OK")            — transition applied.
             (False, reason: str)    — stale/invalid event, caller should discard.
         """
-        payment = (
-            self.db.query(Payment)
-            .filter(Payment.payment_id == payment_id)
-            .first()
-        )
+        payment = self.db.query(Payment).filter(Payment.payment_id == payment_id).first()
 
         if not payment:
             logger.warning(
-                f"EventSequencer: payment {payment_id} not found "
-                f"for event {event_type}"
+                f"EventSequencer: payment {payment_id} not found " f"for event {event_type}"
             )
             return False, f"Payment {payment_id} not found"
 

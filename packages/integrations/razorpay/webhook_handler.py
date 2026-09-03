@@ -94,6 +94,7 @@ async def receive_razorpay_webhook(
     if not event_id:
         # Fallback: use hash of raw body as event ID
         import hashlib
+
         event_id = hashlib.sha256(raw_body).hexdigest()[:32]
         logger.warning(f"Missing X-Razorpay-Event-Id, using body hash: {event_id}")
 
@@ -113,9 +114,7 @@ async def receive_razorpay_webhook(
     new_state = RAZORPAY_EVENT_TO_STATE.get(event_type)
     if new_state and razorpay_payment_id:
         payment = (
-            db.query(Payment)
-            .filter(Payment.razorpay_payment_id == razorpay_payment_id)
-            .first()
+            db.query(Payment).filter(Payment.razorpay_payment_id == razorpay_payment_id).first()
         )
         if payment:
             sequencer = EventSequencer(db)

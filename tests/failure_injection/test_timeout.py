@@ -7,9 +7,7 @@ in UNKNOWN state without first reconciling with Razorpay.
 
 from __future__ import annotations
 
-import pytest
-
-from packages.domain.payments.models import Payment, PaymentState
+from packages.domain.payments.models import PaymentState
 from packages.domain.policy.engine import PolicyEngine
 from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
 from packages.workflows.reconciliation.unknown_state import (

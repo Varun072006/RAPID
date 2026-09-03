@@ -33,9 +33,7 @@ class Settings(BaseSettings):
     razorpay_mode: str = Field(default="mock")  # "mock" or "test"
 
     # ── Database ─────────────────────────────────────────────────
-    database_url: str = Field(
-        default="postgresql://rapid:rapid@localhost:5432/rapid_db"
-    )
+    database_url: str = Field(default="postgresql://rapid:rapid@localhost:5432/rapid_db")
 
     # ── Redis ────────────────────────────────────────────────────
     redis_url: str = Field(default="redis://localhost:6379/0")
