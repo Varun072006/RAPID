@@ -9,7 +9,7 @@ RAPID is a correctness-focused payment recovery engine. It reconstructs payment 
 
 ## Demo Video
 
-_Demo video link will be added here._
+[_Demo video link will be added here._](https://drive.google.com/file/d/1djEdFyBYT8_yVaRH98HlYbvnErKJ5epj/view?usp=sharing)
 
 ## Why RAPID
 
