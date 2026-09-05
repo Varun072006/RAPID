@@ -7,6 +7,10 @@ RAPID is a correctness-focused payment recovery engine. It reconstructs payment 
 
 > **AI recommends. Policy authorizes. The state machine protects payment semantics.**
 
+## Demo Video
+
+_Demo video link will be added here._
+
 ## Why RAPID
 
 Naive retries can duplicate charges after timeouts, amplify bank incidents, and waste money on actions that have poor net value. RAPID treats recovery as a bounded-autonomy workflow:
