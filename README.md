@@ -1,285 +1,219 @@
-# RAPID — Autonomous Payment Recovery Engine
+# RAPID
 
-> **Razorpay AI Buildathon 2026 — Track 03: AI Revenue Recovery**
+**Revenue-optimized Autonomous Payment Intervention & Decision Engine**  
+Razorpay AI Buildathon 2026 | Track 03: AI Revenue Recovery
 
-An autonomous payment decision engine that reconstructs true payment state from asynchronous webhooks, predicts recovery outcomes for multiple interventions, optimizes for expected net revenue, enforces deterministic policy gates, executes Test Mode workflows, and reconciles timeouts safely — **without risking double-charges**.
+RAPID is a correctness-focused payment recovery engine. It reconstructs payment state from asynchronous Razorpay webhooks, predicts recovery outcomes, selects actions by expected net value, and applies deterministic safety policy before any financial side effect.
 
----
+> **AI recommends. Policy authorizes. The state machine protects payment semantics.**
 
-## What Makes RAPID Different
+## Why RAPID
 
-Most teams build "retry AI." RAPID builds a **bounded-autonomy system** that:
+Naive retries can duplicate charges after timeouts, amplify bank incidents, and waste money on actions that have poor net value. RAPID treats recovery as a bounded-autonomy workflow:
 
-- Understands payment lifecycle semantics (authorized ≠ captured ≠ settled)
-- Handles distributed uncertainty safely (UNKNOWN state, timeout reconciliation)
-- Optimizes for expected net revenue — not just recovery probability
-- Has a deterministic policy gate that can never be overridden by the LLM
+1. Verify the raw webhook cryptographically.
+2. Deduplicate and sequence provider events.
+3. Reconstruct the authoritative local payment state.
+4. Reconcile `UNKNOWN` payments before any retry.
+5. Predict failure mode and action-specific recovery probability.
+6. Optimize expected net value, including cost, friction, and risk.
+7. Apply deterministic policy gates.
+8. Execute through a Razorpay adapter with idempotency.
+9. Record the complete audit trail.
 
-**LLM proposes. Policy engine authorizes. No exceptions.**
+## Core Capabilities
 
----
+- HMAC-SHA256 verification over the raw webhook body.
+- Database uniqueness protection for Razorpay event IDs.
+- Valid-transition state machine for `CREATED`, `AUTHORIZED`, `CAPTURED`, `SETTLED`, `FAILED`, `PENDING`, `UNKNOWN`, `PAYMENT_LINK_SENT`, and `ESCALATED`.
+- Timeout reconciliation against Razorpay's authoritative payment status.
+- Failure classifier plus three calibrated recovery predictors.
+- Expected Net Value optimizer:
 
-## Core Features
+  $$
+  EN_v(a) = P(\text{recovery} \mid a) \times \text{amount} - \text{cost} - \text{friction} - \text{risk}
+  $$
 
-### 1 — Payment Truth Engine
-Reconstructs authoritative payment state from noisy, async webhooks:
-- HMAC-SHA256 signature verification over **raw body** (not parsed JSON)
-- Event deduplication on Razorpay's `event_id`
-- Out-of-order event handling — stale webhooks silently dropped
-- **Unknown-state reconciliation** — timeout → query Razorpay → safe decision
-
-### 2 — Recovery Intelligence
-Three calibrated ML models (one per action):
-- **Failure classifier** — transient / customer_action_needed / infrastructure / customer_issue
-- **Recovery predictors** — P(success | retry_now), P(success | retry_later), P(success | payment_link)
-- Trained on 100K synthetic scenarios with **causal structure**
-
-### 3 — Revenue Optimizer
-Selects the action that maximises **Expected Net Value**:
-```
-ENv = P(recovery) × amount − cost − friction_penalty − risk_penalty
-```
-A 90% probability action with high friction can lose to a 70% action with low friction.
-
-### 4 — Autonomy Control Plane
-5 deterministic policy rules (no ML, fully testable):
-
-| Rule | Condition | Action |
-|------|-----------|--------|
-| Unknown-state guard | `state == UNKNOWN && retry` | DENY |
-| Amount limit | `amount > max_auto_amount` | DENY |
-| Retry cap | `retry_count >= max_retries` | DENY |
-| Confidence gate | `confidence < threshold && high_value` | DENY |
-| Incident gate | `system == INCIDENT && retry` | DENY |
-
-### 5 — Agent Layer (Ollama + Qwen3)
-LLM-synthesized explanation for every decision. Runs **fully locally** — no API key, no data leaving your machine. Falls back to deterministic logic if Ollama is not running.
-
----
-
-## Results & Empirical Evaluation
-
-All evaluations are measured across a rigorous **10,000 held-out payment scenario dataset** (`benchmark_results.csv` and `evaluation_results.json`), comparing RAPID against a fixed retry baseline and an Oracle upper bound.
-
-| Metric | Baseline (Fixed 6h Retry) | Theoretical Oracle (Cheat Upper-Bound) | RAPID Engine (Autonomous ML + Policy Gate) |
-|---|---|---|---|
-| **Recovery Rate** | 41.83% (4,183 / 10k) | 50.15% (5,015 / 10k) | **47.23% (4,723 / 10k)** *(+5.40% over baseline)* |
-| **Amount Recovered (10k txns)** | ₹45,90,672.48 | ₹54,77,158.90 | **₹51,38,205.23** *(+₹5,47,532.75 net lift)* |
-| **Unnecessary Interventions** | 58.17% (5,817 retries) | 49.85% (4,985 retries) | **52.77% (5,277 retries)** *(Slashing 540 wasted calls)* |
-| **Decision Regret / Payment** | ₹53.68 | ₹0.00 (Counterfactual optimal) | **₹21.46** (**60.0% Regret Reduction**) |
-| **Unknown-State Errors** | 0 (blind retry) | 0 | **0 (Strict State Reconciler)** |
-| **Double-Charge Incidents** | High risk | 0 | **0 (Idempotency Enforced)** |
-| **Policy Guardrail Violations** | N/A | 0 | **0 (Deterministic Control Plane)** |
-
-> ℹ **Evaluation Transparency**: The "Oracle" baseline possesses theoretical omniscience (evaluating hidden potential outcomes). In real-world production, no system has oracle visibility. RAPID achieves **94.2% of the Oracle's recovery performance** purely from observable webhook telemetry and calibrated gradient boosting classifiers.
->
-> 📊 **Detailed Multi-Slice Benchmark**: For breakdowns across UPI, Cards, Netbanking, high-value tickets, bank incident windows, and subscription renewals, inspect [`benchmark_results.csv`](file:///c:/Users/varun/Downloads/RAPID/benchmark_results.csv).
-
----
-
-## Business Impact & ROI (Track 03)
-
-For an Indian digital merchant or SaaS enterprise processing 1,000,000 transactions/month with a 10% payment failure rate (100,000 failed txns/month, average ticket ₹1,087, ₹10.87 Cr exposed GMV):
-
-1. **Incremental Revenue Lift**:
-   - Fixed Retry recovers ₹4.59 Cr GMV.
-   - **RAPID recovers ₹5.14 Cr GMV** — unlocking **+₹54.75 Lakhs in additional monthly gross revenue** (~₹6.57 Cr annualized).
-2. **Customer Trust & Bank Health Protection**:
-   - Naive retries generate 5,400 unnecessary bank hits monthly, triggering bank-level rate limits and UPI fraud score penalties.
-   - RAPID's expected net value formulation suppresses unproductive retries, preserving merchant gateway reputation.
-3. **Turnkey Razorpay Monetization**:
-   - Converts dead checkout drops and recurring mandate card failures into instant omnichannel WhatsApp/SMS Razorpay Payment Links with configurable expiry.
-
----
+- Five deterministic policy controls: unknown-state guard, amount limit, retry cap, confidence gate, and incident gate.
+- Local Qwen3/Ollama explanation layer with deterministic fallback.
+- Razorpay Test Mode and credential-free mock adapter.
+- FastAPI APIs, Next.js operations dashboard, Prometheus metrics, and Docker Compose.
 
 ## Architecture
 
-```
-Razorpay Webhook (or Mock)
-         ↓
-[HMAC-SHA256 verification]   ← raw body, not parsed JSON
-         ↓
-[Deduplication — event_id]   ← DB unique constraint
-         ↓
-[Event Store — append only]  ← full replay always available
-         ↓
-[State Machine]              ← valid transitions only
-         ↓
-[Failure Classifier]         ← ML model, 4 classes
-         ↓
-[Recovery Predictors × 3]    ← one model per action
-         ↓
-[Revenue Optimizer]          ← Expected Net Value
-         ↓
-[Agent (Qwen3/Ollama)]       ← explain + synthesize
-         ↓
-[Policy Engine]              ← deterministic gate
-         ↓
-[Razorpay Adapter]           ← mock or Test Mode
-         ↓
-[Audit Log]                  ← every event, replayable
+```text
+Razorpay / Mock Webhook
+          |
+          v
+Raw-body HMAC verification
+          |
+          v
+Event deduplication and append-only audit
+          |
+          v
+Payment event sequencer and state machine
+          |
+          +--------------------+
+          |                    |
+     Failed payment       UNKNOWN payment
+          |                    |
+          v                    v
+   ML predictions       Razorpay reconciliation
+          |                    |
+          +---------+----------+
+                    v
+          Expected Net Value optimizer
+                    |
+          Local agent explanation
+                    |
+          Deterministic policy gate
+                    |
+          Idempotent adapter execution
+                    |
+          Audit timeline and dashboard
 ```
 
----
+The repository is a modular monolith. Domain logic is separated from Razorpay integration, while PostgreSQL, Redis, FastAPI, Next.js, and Prometheus run through Docker Compose.
 
-## Getting Started
+## Verified Benchmark
+
+The stored evaluation artifact contains 10,000 synthetic held-out scenarios:
+
+| Strategy | Recovery rate | Amount recovered | Mean regret/payment |
+|---|---:|---:|---:|
+| Fixed six-hour retry | 41.83% | ₹4,590,672.48 | ₹53.68 |
+| Oracle-assisted comparator | 50.15% | ₹5,477,158.90 | ₹0.00 |
+| **RAPID** | **47.23%** | **₹5,138,205.23** | **₹21.46** |
+
+Compared with fixed retry, the artifact reports **+5.40 percentage points** recovery, **₹547,532.75** additional recovered amount per 10,000 scenarios, and **60.014%** lower decision regret. It also reports zero unknown-state errors, double-charge incidents, and policy guardrail violations.
+
+These are synthetic evaluation results, not production guarantees. The distribution-shift artifact shows a large absolute performance drop, so robustness claims require independent data and further validation.
+
+## Technology
+
+| Layer | Technology |
+|---|---|
+| Runtime | Python 3.12+, `uv`, Hatchling |
+| API | FastAPI, Uvicorn, Pydantic v2 |
+| Persistence | SQLAlchemy 2, PostgreSQL 16, SQLite fallback |
+| Cache/infrastructure | Redis 7 |
+| ML | scikit-learn, XGBoost, NumPy, pandas |
+| Agent | Ollama with Qwen3 8B/14B, deterministic mock fallback |
+| Frontend | Next.js 14, React 18, TypeScript, TailwindCSS, Recharts |
+| Observability | Prometheus client, OpenTelemetry dependencies, Loguru |
+| Testing | pytest, Hypothesis, pytest-cov |
+| Deployment | Docker Compose |
+
+## Quick Start
 
 ### Prerequisites
-- Python 3.12+
-- Docker & Docker Compose
-- (Optional) Ollama for LLM features
-- (Optional) Razorpay Test Mode keys
 
-### 1 — Install uv (Python package manager)
+- Python 3.12 or newer.
+- `uv`.
+- Docker Desktop and Docker Compose.
+- Optional: Ollama and a local Qwen3 model.
+- Optional: Razorpay Test Mode credentials.
 
-```bash
-# Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+### Install and run
 
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-Verify: `uv --version`
-
-### 2 — Clone & Configure
-
-```bash
-git clone https://github.com/Varun072006/rapid-payment-recovery.git
-cd rapid-payment-recovery
-
-cp .env.example .env
-```
-
-**Without Razorpay keys** (works out of the box):
-```env
-RAZORPAY_MODE=mock      # ← default — no credentials needed
-LLM_PROVIDER=mock       # ← default — no Ollama needed
-```
-
-**With Razorpay Test Mode keys** (full integration):
-1. Sign up at [razorpay.com](https://razorpay.com) (free, no payment)
-2. Go to **Settings → API Keys → Generate Test Key**
-3. Copy `key_id` and `key_secret` into `.env`
-4. Set `RAZORPAY_MODE=test`
-
-**With Ollama + Qwen3** (LLM reasoning):
-```bash
-# Install from https://ollama.com
-ollama pull qwen3:8b   # or qwen3:14b for better quality
-```
-Then set `LLM_PROVIDER=ollama` in `.env`.
-
-### 3 — Install Dependencies
-
-```bash
+```powershell
 uv sync --all-extras
-```
-
-### 4 — Start All Services
-
-```bash
 docker-compose up -d
-```
-
-This starts: PostgreSQL 16 · Redis 7 · FastAPI · Next.js dashboard · Prometheus
-
-### 5 — Generate Data & Train Models
-
-```bash
-make data     # 100K synthetic scenarios (< 2 min)
-make train    # train 4 ML models (< 1 min)
-make evaluate # baselines + distribution-shift report
-```
-
-### 6 — Run Demo
-
-```bash
+make data
+make train
+make evaluate
 python scripts/demo.py
 ```
 
-### 7 — Open Dashboard
+Open:
 
-[http://localhost:3000](http://localhost:3000) — metrics, payment feed, timeline, failure injection lab
+- Dashboard: <http://localhost:3000>
+- API: <http://localhost:8000>
+- OpenAPI: <http://localhost:8000/docs>
+- Prometheus: <http://localhost:9090>
 
----
+Mock mode is the default and does not require Razorpay credentials or Ollama. To use Razorpay Test Mode, configure `RAZORPAY_MODE=test`, the Razorpay key values, and `RAZORPAY_WEBHOOK_SECRET` in `.env`. To use Qwen3, set `LLM_PROVIDER=ollama` and configure `OLLAMA_HOST` and `LLM_MODEL`.
 
-## Running Tests
+## Common Commands
 
-```bash
-make test               # full suite
-make test-unit          # fast unit tests
-make test-failures      # timeout / duplicate / out-of-order injection
-make test-property      # Hypothesis property tests
-make coverage           # HTML coverage report
+```powershell
+make install       # Install dependencies
+make data          # Generate 100K causal synthetic scenarios
+make train         # Train the classifier and three recovery models
+make evaluate      # Evaluate baseline, RAPID, and shift scenarios
+make test          # Run the complete pytest suite
+make test-unit     # Run unit tests
+make test-failures # Run timeout, duplicate, and ordering tests
+make test-property # Run Hypothesis property tests
+make lint          # Run Ruff and Black checks
+make demo          # Run the interactive demo
+make up            # Start Docker Compose services
+make down          # Stop Docker Compose services
 ```
 
----
+## API Surface
 
-## Key Design Decisions
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/health` | Service health and runtime configuration |
+| `GET` | `/metrics` | Prometheus metrics |
+| `POST` | `/webhooks/razorpay` | Verify and process Razorpay events |
+| `POST` | `/api/payments` | Create a payment record |
+| `GET` | `/api/payments` | List payments |
+| `GET` | `/api/payments/{payment_id}` | Read payment details |
+| `GET` | `/api/payments/{payment_id}/timeline` | Read the audit timeline |
+| `POST` | `/api/recovery/process?payment_id=...` | Run one recovery decision |
+| `POST` | `/api/recovery/reconcile` | Reconcile an unknown payment |
+| `POST` | `/api/batch/recover` | Process a batch of failed payments |
+| `GET` | `/api/metrics/summary` | Read live operational metrics |
+| `GET` | `/api/summary` | Read live and benchmark summary |
+| `POST` | `/api/demo/inject` | Inject a failure scenario |
 
-**Why one ML model per action?**
-Three separate logistic regression models are simpler to debug, independently calibrated, and easier to A/B test than a single multi-output model.
+## Repository Layout
 
-**Why synthetic evaluation?**
-No production data is available. We generate labels from a documented causal simulator. Limitations are stated clearly. Distribution-shift tests measure graceful degradation.
-
-**Why UNKNOWN state?**
-Network timeouts are common. When an API call times out, you don't know if it succeeded. Retrying blindly risks double-charging. RAPID marks state as UNKNOWN and reconciles before acting.
-
-**Why Ollama + Qwen3?**
-Runs locally, no API key, no data egress. Falls back to deterministic logic if unavailable — the system never breaks because the LLM is down.
-
-**Why mock Razorpay mode?**
-Lets the project run and demo fully without credentials. Same code paths, same state machine, same policy engine — only the HTTP calls are intercepted.
-
----
-
-## Known Limitations
-
-1. **Circular synthetic evaluation**: Ground truth from the simulator that generates training data. Real validation requires production data.
-2. **Sparse merchant histories**: Model performs worse on new merchants with no history.
-3. **Fixed global policy**: Real system would adapt per merchant.
-4. **No drift detection**: Requires monitoring + periodic retraining.
-
----
-
-## Repository Structure
-
-```
-rapid/
-├── apps/
-│   ├── api/              # FastAPI backend
-│   └── dashboard/        # Next.js frontend
-├── packages/
-│   ├── domain/           # Business logic (no Razorpay)
-│   │   ├── payments/     # State machine, models, event store
-│   │   ├── recovery/     # Optimizer, health detector
-│   │   └── policy/       # Policy engine
-│   ├── integrations/
-│   │   └── razorpay/     # Adapter + mock adapter
-│   ├── ml/               # Causal model, training, evaluation
-│   ├── workflows/        # Orchestrator, agent, reconciler
-│   └── utils/            # Idempotency, audit
-├── tests/
-│   ├── unit/             # State machine, policy, optimizer
-│   ├── contract/         # Payment semantic invariants
-│   ├── property/         # Hypothesis property tests
-│   └── failure_injection/ # Timeout, duplicate, out-of-order
-├── scripts/              # generate-data, train, evaluate, demo
-└── docs/                 # Architecture, evaluation, operations
+```text
+apps/api/                         FastAPI application and routers
+apps/dashboard/                   Next.js operations console
+packages/domain/payments/         Models, state machine, events, deduplication
+packages/domain/policy/           Deterministic policy engine
+packages/domain/recovery/         Revenue optimizer and health detector
+packages/integrations/razorpay/   Real adapter, mock adapter, webhook handler
+packages/ml/                      Simulation, features, training, evaluation
+packages/workflows/               Recovery orchestrator and reconciliation
+packages/utils/                   Audit logging and idempotency
+scripts/                          Data, training, evaluation, and demo commands
+tests/                            Unit, integration, contract, property, failure tests
+docs/                             Project documentation directory
+PROJECT_REPORT.md                 Detailed end-to-end technical report
+docker-compose.yml                Local service topology
+pyproject.toml                    Python dependencies and tool configuration
+Makefile                          Developer command interface
 ```
 
----
+## Testing
+
+The repository covers state transitions, policy boundaries, Expected Net Value ordering, idempotency determinism, captured and settled payment invariants, unknown-state reconciliation, duplicate and out-of-order webhooks, and FastAPI health, payment, demo, and metrics endpoints.
+
+The latest local run passed **99 tests**. The repository also contains stored benchmark and test artifacts; see [PROJECT_REPORT.md](PROJECT_REPORT.md) for the full breakdown and known warnings.
+
+## Current Limitations
+
+- Evaluation data is synthetic and generated from the same causal simulator used for labels.
+- The runtime orchestrator currently executes payment links automatically; retry actions are recorded and escalated until a new-order retry flow is implemented.
+- The default policy is global rather than merchant-specific.
+- Health windows are in memory and need shared state for multiple API instances.
+- Production deployment still needs migrations, replay protection, rate limiting, secret management, concurrency controls, and live Razorpay contract tests.
+- The dashboard contains seeded demo defaults when the API is unavailable.
+
+## Documentation
+
+- [End-to-End Project Report](PROJECT_REPORT.md): architecture, workflows, APIs, data model, ML, evaluation, security review, and roadmap.
 
 ## License
 
-MIT — open-source, ready to deploy.
-
----
+MIT. See [LICENSE](LICENSE).
 
 ## Author
 
-**Varun S**
-- GitHub: [@Varun072006](https://github.com/Varun072006)
-- LinkedIn: [varun-s-41bb95357](https://linkedin.com/in/varun-s-41bb95357)
+**Varun S**  
+GitHub: [@Varun072006](https://github.com/Varun072006)
