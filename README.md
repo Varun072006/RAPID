@@ -192,6 +192,15 @@ Mock mode is the default and does not require Razorpay credentials or Ollama. To
 
 ## Common Commands
 
+On Windows PowerShell, use the `uv run` equivalents below if GNU `make` is not installed:
+
+```powershell
+uv run --extra data python scripts/generate-data.py
+uv run --extra data python scripts/train.py
+uv run --extra data python scripts/evaluate.py
+uv run pytest tests/ -q
+```
+
 ```powershell
 make install       # Install dependencies
 make data          # Generate 100K causal synthetic scenarios
