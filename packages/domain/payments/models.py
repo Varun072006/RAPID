@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -103,9 +104,9 @@ class Payment(Base):
     bank = Column(String(64), nullable=True)
 
     # State
-    state = Column(Enum(PaymentState), default=PaymentState.CREATED, nullable=False)
+    state: Any = Column(Enum(PaymentState), default=PaymentState.CREATED, nullable=False)
     failure_mode = Column(String(64), nullable=True)
-    retry_count = Column(Integer, default=0, nullable=False)
+    retry_count: Any = Column(Integer, default=0, nullable=False)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
@@ -127,7 +128,7 @@ class RecoveryDecision(Base):
     payment_id = Column(String(64), index=True, nullable=False)
 
     # Decision
-    action = Column(Enum(RecoveryAction), nullable=False)
+    action: Any = Column(Enum(RecoveryAction), nullable=False)
     predicted_probability = Column(Float, nullable=False)
     expected_value = Column(Float, nullable=False)  # in paise
 

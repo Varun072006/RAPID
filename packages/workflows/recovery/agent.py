@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
+from typing import Any, cast
 
 from loguru import logger
 
@@ -93,7 +93,10 @@ You must respond ONLY with valid JSON (no markdown, no extra text):
                 timeout=30.0,
             )
             response.raise_for_status()
-            return response.json().get("response", "")
+            resp_data = response.json()
+            if isinstance(resp_data, dict):
+                return str(resp_data.get("response", ""))
+            return ""
         except Exception as exc:
             logger.warning(f"Ollama call failed: {exc} — falling back to mock")
             return ""
@@ -102,7 +105,7 @@ You must respond ONLY with valid JSON (no markdown, no extra text):
         self,
         payment_context: dict[str, Any],
         predictions: dict[str, float],
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Fallback: deterministic proposal when LLM is unavailable.
         Selects action with highest predicted probability.
@@ -136,7 +139,7 @@ You must respond ONLY with valid JSON (no markdown, no extra text):
         payment_context: dict[str, Any],
         predictions: dict[str, float],
         policy_check: dict[str, Any] | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Propose a recovery action using LLM reasoning.
 
@@ -182,7 +185,7 @@ Based on this information, provide a recovery recommendation."""
                 lines = clean.split("\n")
                 clean = "\n".join(lines[1:-1])
 
-            proposal = json.loads(clean)
+            proposal = cast(dict[str, Any], json.loads(clean))
 
             # Validate required fields
             required = {"diagnosis", "recommended_action", "reason", "confidence"}

@@ -78,3 +78,4 @@ addopts = "--cov=packages --cov=apps --cov-report=term-missing"
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]

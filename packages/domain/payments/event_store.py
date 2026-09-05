@@ -9,7 +9,8 @@ Design principles:
 
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from typing import Any, cast
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -68,7 +69,7 @@ class EventStore:
             event_id=str(audit_row.id),
             payment_id=payment_id,
             event_type=event_type,
-            timestamp=audit_row.timestamp,
+            timestamp=cast(datetime, audit_row.timestamp),
             data=data,
         )
 
@@ -91,10 +92,10 @@ class EventStore:
         return [
             PaymentEvent(
                 event_id=str(row.id),
-                payment_id=row.payment_id,
-                event_type=row.event_type,
-                timestamp=row.timestamp,
-                data=row.details or {},
+                payment_id=str(row.payment_id),
+                event_type=str(row.event_type),
+                timestamp=cast(datetime, row.timestamp),
+                data=cast(dict[str, Any], row.details or {}),
             )
             for row in rows
         ]

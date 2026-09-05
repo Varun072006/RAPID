@@ -28,7 +28,6 @@ from packages.domain.payments.models import Payment, PaymentState, RecoveryActio
 from packages.domain.policy.engine import PolicyEngine
 from packages.domain.recovery.optimizer import RevenueOptimizer
 from packages.domain.recovery.system_health import HealthDetector
-from packages.integrations.razorpay.adapter import RazorpayAdapter
 from packages.ml.features.engineering import ERROR_CODE_MAP, FEATURE_COLUMNS
 from packages.utils.audit import AuditLogger
 from packages.utils.idempotency import IdempotencyKeyGenerator
@@ -62,7 +61,7 @@ class RecoveryOrchestrator:
 
     def __init__(
         self,
-        razorpay: RazorpayAdapter,
+        razorpay: Any,
         optimizer: RevenueOptimizer,
         policy: PolicyEngine,
         health_detector: HealthDetector,
@@ -78,23 +77,27 @@ class RecoveryOrchestrator:
         self.audit = AuditLogger(db)
 
         # Lazy-loaded ML models
-        self._failure_clf = None
-        self._recovery_bundle = None
+        self._failure_clf: Any = None
+        self._recovery_bundle: dict[str, Any] | None = None
 
     def _ensure_models(self) -> None:
         if self._failure_clf is None:
             self._failure_clf, self._recovery_bundle = _load_models()
             logger.info("ML models loaded")
 
-    def _predict_failure_mode(self, features_dict: dict) -> tuple[str, float]:
+    def _predict_failure_mode(self, features_dict: dict[str, Any]) -> tuple[str, float]:
         """Classify the failure mode and return (mode, confidence)."""
+        self._ensure_models()
+        assert self._failure_clf is not None
         feature_vec = [[features_dict[col] for col in FEATURE_COLUMNS]]
         mode = self._failure_clf.predict(feature_vec)[0]
         proba = max(self._failure_clf.predict_proba(feature_vec)[0])
         return mode, float(proba)
 
-    def _predict_recovery_probs(self, features_dict: dict) -> dict[str, float]:
+    def _predict_recovery_probs(self, features_dict: dict[str, Any]) -> dict[str, float]:
         """Predict P(success) for each recovery action."""
+        self._ensure_models()
+        assert self._recovery_bundle is not None
         scaler = self._recovery_bundle["scaler"]
         models = self._recovery_bundle["models"]
 
@@ -105,7 +108,7 @@ class RecoveryOrchestrator:
             action: float(model.predict_proba(scaled)[0][1]) for action, model in models.items()
         }
 
-    def process_failed_payment(self, payment_id: str) -> dict:
+    def process_failed_payment(self, payment_id: str) -> dict[str, Any]:
         """
         Run the full recovery pipeline for one failed payment.
 
@@ -167,7 +170,9 @@ class RecoveryOrchestrator:
         logger.info(f"Recovery predictions: {recovery_probs}")
 
         # ── Step 5: Revenue optimizer ─────────────────────────────────────
-        best_action, all_evals = self.optimizer.select_best_action(recovery_probs, payment.amount)
+        best_action, all_evals = self.optimizer.select_best_action(
+            recovery_probs, int(payment.amount)
+        )
         best_eval = next(e for e in all_evals if e.action == best_action)
         self.audit.action_selected(
             payment_id,
@@ -198,10 +203,10 @@ class RecoveryOrchestrator:
         system_healthy = not self.health_detector.should_pause_retries()
         authorized, policy_reason = self.policy.authorize_action(
             action=best_action,
-            amount=payment.amount,
+            amount=int(payment.amount),
             recovery_confidence=best_eval.recovery_prob,
             current_state=payment.state.value,
-            retry_count=payment.retry_count,
+            retry_count=int(payment.retry_count),
             system_healthy=system_healthy,
         )
         self.audit.policy_checked(payment_id, best_action, authorized, policy_reason)
@@ -236,18 +241,18 @@ class RecoveryOrchestrator:
         idempotency_key = IdempotencyKeyGenerator.generate(
             payment_id=payment_id,
             action_type=best_action,
-            merchant_id=payment.merchant_id,
+            merchant_id=str(payment.merchant_id),
         )
 
         # ── Step 9: Execute ───────────────────────────────────────────────
-        execution_result: dict = {}
+        execution_result: dict[str, Any] = {}
         executed = False
 
         try:
             if best_action == "payment_link":
                 result = self.razorpay.create_payment_link(
-                    amount=payment.amount,
-                    customer_id=payment.customer_id,
+                    amount=int(payment.amount),
+                    customer_id=str(payment.customer_id),
                     description=f"Payment recovery for {payment_id}",
                     idempotency_key=idempotency_key,
                 )
@@ -265,7 +270,7 @@ class RecoveryOrchestrator:
                 }
                 executed = True
 
-            payment.retry_count += 1
+            payment.retry_count = int(payment.retry_count) + 1
             self.db.commit()
 
             self.audit.action_executed(payment_id, best_action, idempotency_key, execution_result)

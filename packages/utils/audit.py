@@ -99,7 +99,7 @@ class AuditLogger:
         payment_id: str,
         action: str,
         expected_value: float,
-        all_evaluations: list[dict],
+        all_evaluations: list[dict[str, Any]],
     ) -> None:
         self.log(
             payment_id,
@@ -135,7 +135,7 @@ class AuditLogger:
         payment_id: str,
         action: str,
         idempotency_key: str,
-        result: dict,
+        result: dict[str, Any],
     ) -> None:
         self.log(
             payment_id,
@@ -166,7 +166,7 @@ class AuditLogger:
             actor="reconciler",
         )
 
-    def get_timeline(self, payment_id: str) -> list[dict]:
+    def get_timeline(self, payment_id: str) -> list[dict[str, Any]]:
         """Return full audit timeline as a list of dicts (for API/dashboard)."""
         events = self._store.get_timeline(payment_id)
         return [

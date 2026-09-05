@@ -13,6 +13,8 @@ with a warning log — they do NOT raise exceptions or change state.
 
 from __future__ import annotations
 
+from typing import Any
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -39,7 +41,7 @@ class EventSequencer:
         payment_id: str,
         event_type: str,
         new_state: PaymentState,
-        details: dict | None = None,
+        details: dict[str, Any] | None = None,
     ) -> tuple[bool, str]:
         """
         Process an incoming event for a payment.

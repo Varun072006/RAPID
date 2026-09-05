@@ -16,6 +16,8 @@ Metrics:
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from loguru import logger
@@ -62,7 +64,7 @@ class HeldOutEvaluator:
         mean_regret = float(np.mean(regrets))
         return total_regret, mean_regret
 
-    def evaluate_baseline_fixed_retry(self) -> dict:
+    def evaluate_baseline_fixed_retry(self) -> dict[str, Any]:
         """Baseline 1: always retry_later."""
         col = "outcome_if_retry_later"
         recovered_mask = self.test_df[col] > self.SUCCESS_THRESHOLD
@@ -85,7 +87,7 @@ class HeldOutEvaluator:
             "unsafe_autonomy_rate": 0.0,
         }
 
-    def evaluate_baseline_rule_based(self) -> dict:
+    def evaluate_baseline_rule_based(self) -> dict[str, Any]:
         """Baseline 2: Expert Rule Baseline (heuristically picking max potential outcome)."""
         recovered = 0
         amount_recovered = 0.0
@@ -122,7 +124,7 @@ class HeldOutEvaluator:
             "unsafe_autonomy_rate": 0.0,
         }
 
-    def evaluate_rapid(self, model_bundle: dict) -> dict:
+    def evaluate_rapid(self, model_bundle: dict[str, Any]) -> dict[str, Any]:
         """Evaluate RAPID's ML-based recovery decisions."""
         scaler = model_bundle["scaler"]
         models = model_bundle["models"]
@@ -170,7 +172,7 @@ class HeldOutEvaluator:
             "unsafe_autonomy_rate": 0.0,
         }
 
-    def generate_report(self, model_bundle: dict | None = None) -> dict:
+    def generate_report(self, model_bundle: dict[str, Any] | None = None) -> dict[str, Any]:
         """Generate full evaluation report."""
         baseline_fixed = self.evaluate_baseline_fixed_retry()
         baseline_rule = self.evaluate_baseline_rule_based()

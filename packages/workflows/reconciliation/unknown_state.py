@@ -18,12 +18,12 @@ Invariant:
 from __future__ import annotations
 
 import enum
+from typing import Any
 
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from packages.domain.payments.models import Payment, PaymentState
-from packages.integrations.razorpay.adapter import RazorpayAdapter
 
 
 class ReconciliationOutcome(str, enum.Enum):
@@ -46,7 +46,7 @@ class UnknownStateResolver:
     - Manual reconciliation is requested
     """
 
-    def __init__(self, razorpay: RazorpayAdapter, db: Session) -> None:
+    def __init__(self, razorpay: Any, db: Session) -> None:
         self.razorpay = razorpay
         self.db = db
 
@@ -85,7 +85,7 @@ class UnknownStateResolver:
         self,
         payment_id: str,
         razorpay_payment_id: str,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Handle the timeout scenario.
 
@@ -169,7 +169,7 @@ class UnknownStateResolver:
         self,
         payment_id: str,
         razorpay_payment_id: str,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Reconcile and apply the state update to the database."""
         result = self.handle_timeout(payment_id, razorpay_payment_id)
 

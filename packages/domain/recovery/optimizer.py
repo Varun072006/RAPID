@@ -19,6 +19,7 @@ friction or cost.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from loguru import logger
 
@@ -69,7 +70,7 @@ class RevenueOptimizer:
     It ranks all actions by ENv and returns the best one.
     """
 
-    def __init__(self, params: dict | None = None) -> None:
+    def __init__(self, params: dict[str, Any] | None = None) -> None:
         self.params = params or ACTION_PARAMS
 
     def evaluate_action(

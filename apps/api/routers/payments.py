@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -24,7 +26,7 @@ class CreatePaymentRequest(BaseModel):
 
 
 @router.post("/payments", status_code=201)
-def create_payment(req: CreatePaymentRequest, db: Session = Depends(get_db)) -> dict:
+def create_payment(req: CreatePaymentRequest, db: Session = Depends(get_db)) -> dict[str, Any]:
     """Create a new payment record."""
     existing = db.query(Payment).filter(Payment.payment_id == req.payment_id).first()
     if existing:
@@ -51,7 +53,7 @@ def list_payments(
     limit: int = 20,
     state: str | None = None,
     db: Session = Depends(get_db),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """List recent payments, optionally filtered by state."""
     query = db.query(Payment).order_by(Payment.created_at.desc())
     if state:
@@ -75,7 +77,7 @@ def list_payments(
 
 
 @router.get("/payments/{payment_id}")
-def get_payment(payment_id: str, db: Session = Depends(get_db)) -> dict:
+def get_payment(payment_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     """Get a single payment by ID."""
     payment = db.query(Payment).filter(Payment.payment_id == payment_id).first()
     if not payment:
@@ -96,7 +98,7 @@ def get_payment(payment_id: str, db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/payments/{payment_id}/timeline")
-def get_timeline(payment_id: str, db: Session = Depends(get_db)) -> list[dict]:
+def get_timeline(payment_id: str, db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     """Get full audit timeline for a payment (replay-ready)."""
     audit = AuditLogger(db)
     timeline = audit.get_timeline(payment_id)
@@ -106,7 +108,7 @@ def get_timeline(payment_id: str, db: Session = Depends(get_db)) -> list[dict]:
 
 
 @router.post("/recovery/process")
-def process_recovery(payment_id: str, db: Session = Depends(get_db)) -> dict:
+def process_recovery(payment_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     """
     Trigger recovery pipeline for a failed payment.
     Requires ML models to be trained (make data && make train).
@@ -119,6 +121,7 @@ def process_recovery(payment_id: str, db: Session = Depends(get_db)) -> dict:
     from packages.workflows.recovery.orchestrator import RecoveryOrchestrator
 
     settings = get_settings()
+    razorpay: Any
 
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
@@ -162,7 +165,7 @@ def reconcile_payment(
     payment_id: str | None = None,
     req: ReconcileRequest | None = None,
     db: Session = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """
     Reconcile an UNKNOWN or timed-out payment with Razorpay's authoritative state.
     Enforces idempotency and guarantees zero double-charge risk before any retry.
@@ -173,19 +176,23 @@ def reconcile_payment(
 
     pid = (req.payment_id if req else None) or payment_id
     if not pid:
-        raise HTTPException(status_code=400, detail="payment_id query param or request body is required")
+        raise HTTPException(
+            status_code=400,
+            detail="payment_id query param or request body is required",
+        )
 
     payment = db.query(Payment).filter(Payment.payment_id == pid).first()
     if not payment:
         raise HTTPException(status_code=404, detail=f"Payment {pid} not found")
 
-    rzp_id = (
+    rzp_id = str(
         (req.razorpay_payment_id if req else None)
         or payment.razorpay_payment_id
         or f"pay_{pid}"
     )
 
     settings = get_settings()
+    razorpay: Any
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
         razorpay = MockRazorpayAdapter()
@@ -210,7 +217,9 @@ def reconcile_payment(
 
     prev_state_str = payment.state.value if hasattr(payment.state, "value") else str(payment.state)
     next_state_val = result["next_state"]
-    next_state_str = next_state_val.value if hasattr(next_state_val, "value") else str(next_state_val)
+    next_state_str = (
+        next_state_val.value if hasattr(next_state_val, "value") else str(next_state_val)
+    )
 
     return {
         "payment_id": pid,
@@ -232,7 +241,7 @@ class BatchRecoverRequest(BaseModel):
 def batch_recover(
     req: BatchRecoverRequest | None = None,
     db: Session = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """
     Recover a batch of failed payments autonomously.
     Measures cumulative money recovered, action distributions, and policy safety checks.
@@ -245,6 +254,7 @@ def batch_recover(
     from packages.workflows.recovery.orchestrator import RecoveryOrchestrator
 
     settings = get_settings()
+    razorpay: Any
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
         razorpay = MockRazorpayAdapter()
@@ -281,7 +291,7 @@ def batch_recover(
             .limit(limit)
             .all()
         )
-        batch_pids = [p.payment_id for p in failed_payments]
+        batch_pids = [str(p.payment_id) for p in failed_payments]
 
     if not batch_pids:
         return {
@@ -303,7 +313,7 @@ def batch_recover(
     for pid in batch_pids:
         p = db.query(Payment).filter(Payment.payment_id == pid).first()
         if p:
-            gross_attempted_paise += p.amount
+            gross_attempted_paise += int(p.amount)
         try:
             res = orchestrator.process_failed_payment(pid)
             results.append(res)

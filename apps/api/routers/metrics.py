@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -12,7 +14,7 @@ router = APIRouter(tags=["metrics"])
 
 
 @router.get("/metrics/summary")
-def get_metrics_summary(db: Session = Depends(get_db)) -> dict:
+def get_metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     """
     Return business metrics summary for the dashboard.
     Computed fresh from DB on each request (suitable for prototype).
@@ -61,7 +63,7 @@ def get_metrics_summary(db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/summary")
-def get_executive_summary(db: Session = Depends(get_db)) -> dict:
+def get_executive_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     """
     Executive Track 03 summary for Buildathon evaluation and dashboard header.
     Combines live DB operational counters with calibrated benchmark results.
@@ -75,7 +77,9 @@ def get_executive_summary(db: Session = Depends(get_db)) -> dict:
         .all()
     )
     live_recovered_inr = sum(
-        (d.expected_value / 100.0) for d in executed_decisions if d.expected_value and d.expected_value > 0
+        (d.expected_value / 100.0)
+        for d in executed_decisions
+        if d.expected_value and d.expected_value > 0
     )
 
     return {

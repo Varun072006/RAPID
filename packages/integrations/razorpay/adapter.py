@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-from typing import Any
+from typing import Any, cast
 
 import requests
 from loguru import logger
@@ -90,7 +90,7 @@ class RazorpayAdapter:
                 timeout=self.DEFAULT_TIMEOUT,
             )
             response.raise_for_status()
-            data = response.json()
+            data = cast(dict[str, Any], response.json())
             logger.debug(f"Fetched payment {razorpay_payment_id}: status={data.get('status')}")
             return data
         except requests.Timeout:
@@ -144,7 +144,7 @@ class RazorpayAdapter:
                 timeout=self.DEFAULT_TIMEOUT,
             )
             response.raise_for_status()
-            data = response.json()
+            data = cast(dict[str, Any], response.json())
             logger.info(
                 f"Payment link created: {data.get('id')} for customer {customer_id} "
                 f"amount={amount} idempotency_key={idempotency_key}"
@@ -166,7 +166,7 @@ class RazorpayAdapter:
                 timeout=self.DEFAULT_TIMEOUT,
             )
             response.raise_for_status()
-            return response.json()
+            return cast(dict[str, Any], response.json())
         except requests.HTTPError as exc:
             raise RazorpayError(str(exc)) from exc
 
@@ -179,7 +179,7 @@ class RazorpayAdapter:
                 timeout=self.DEFAULT_TIMEOUT,
             )
             response.raise_for_status()
-            return response.json()
+            return cast(dict[str, Any], response.json())
         except requests.HTTPError as exc:
             raise RazorpayError(str(exc)) from exc
 
@@ -201,7 +201,7 @@ class RazorpayAdapter:
                 timeout=self.DEFAULT_TIMEOUT,
             )
             response.raise_for_status()
-            return response.json()
+            return cast(dict[str, Any], response.json())
         except requests.HTTPError as exc:
             raise RazorpayError(str(exc)) from exc
 

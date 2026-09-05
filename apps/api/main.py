@@ -11,7 +11,9 @@ Startup sequence:
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +29,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan — startup and shutdown."""
     logger.info("RAPID starting up...")
     logger.info(f"  Razorpay mode: {settings.razorpay_mode.upper()}")
@@ -83,7 +85,7 @@ app.include_router(webhook_router)
 
 # ── Health ──────────────────────────────────────────────────────
 @app.get("/health", tags=["system"])
-async def health() -> dict:
+async def health() -> dict[str, Any]:
     """Health check endpoint."""
     return {
         "status": "ok",

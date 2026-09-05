@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
@@ -42,16 +43,17 @@ RAZORPAY_EVENT_TO_STATE: dict[str, PaymentState] = {
 }
 
 
-def get_payment_id_from_payload(payload: dict) -> str | None:
+def get_payment_id_from_payload(payload: dict[str, Any]) -> str | None:
     """Extract the payment ID from a Razorpay webhook payload."""
     try:
         entity = payload.get("payload", {})
         # Different event types nest differently
         payment = entity.get("payment", {}).get("entity", {})
         if payment_id := payment.get("id"):
-            return payment_id
+            return str(payment_id)
         link = entity.get("payment_link", {}).get("entity", {})
-        return link.get("id")
+        link_id = link.get("id")
+        return str(link_id) if link_id else None
     except (KeyError, AttributeError):
         return None
 
@@ -61,7 +63,7 @@ async def receive_razorpay_webhook(
     request: Request,
     db: Session = Depends(lambda: None),  # replaced by real dep in main.py
     razorpay: RazorpayAdapter = Depends(lambda: None),
-) -> dict:
+) -> dict[str, Any]:
     """
     Receive and process a payment event webhook from Razorpay.
 
@@ -119,7 +121,7 @@ async def receive_razorpay_webhook(
         if payment:
             sequencer = EventSequencer(db)
             applied, reason = sequencer.process_event(
-                payment.payment_id,
+                str(payment.payment_id),
                 event_type,
                 new_state,
                 details={"razorpay_event_id": event_id},

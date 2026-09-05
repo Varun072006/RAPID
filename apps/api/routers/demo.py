@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import random
 import string
+from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -43,7 +44,7 @@ def _random_payment_id() -> str:
 
 
 @router.post("/inject")
-def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
+def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict[str, Any]:
     """
     Inject a demo failure scenario.
 
@@ -330,7 +331,8 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
             "amount_inr": 1499.0,
             "description": (
                 "Recurring SaaS subscription mandate debit failed (₹1,499.00). "
-                "RAPID triggers smart backoff schedule + generates payment link to avoid subscriber churn."
+                "RAPID triggers smart backoff schedule + generates payment link "
+                "to avoid subscriber churn."
             ),
             "next_step": f"POST /api/recovery/process?payment_id={payment_id}",
         }

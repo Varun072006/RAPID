@@ -11,6 +11,8 @@ layer never needs a distributed lock.
 
 from __future__ import annotations
 
+from typing import Any
+
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -51,7 +53,7 @@ class Deduplicator:
         self,
         event_id: str,
         event_type: str,
-        raw_payload: dict,
+        raw_payload: dict[str, Any],
     ) -> bool:
         """
         Atomically mark an event as processed.

@@ -91,7 +91,7 @@ class ScenarioGenerator:
                 payment_link *= self.SHIFT_DEGRADATION["payment_link"]
                 # Also degrade observable features to reflect environment shift
                 features["error_code"] = "ISSUER_TIMEOUT"
-                features["latency_ms"] = min(features["latency_ms"] * 2.5, 8000)
+                features["latency_ms"] = min(float(features["latency_ms"]) * 2.5, 8000.0)
 
             row = {
                 "scenario_id": i,

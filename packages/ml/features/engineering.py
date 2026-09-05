@@ -7,6 +7,8 @@ training (from Parquet) and inference (from live DB objects).
 
 from __future__ import annotations
 
+from typing import Any
+
 ERROR_CODE_MAP = {
     "SUCCESS": 0,
     "AUTHORIZATION_FAILED": 1,
@@ -34,7 +36,7 @@ FEATURE_COLUMNS = [
 ]
 
 
-def extract_features(payment: dict) -> dict[str, float]:
+def extract_features(payment: dict[str, Any]) -> dict[str, float]:
     """
     Extract ML features from a payment dict (from DB or simulation).
 
@@ -56,6 +58,6 @@ def extract_features(payment: dict) -> dict[str, float]:
     }
 
 
-def features_to_array(features: dict) -> list[float]:
+def features_to_array(features: dict[str, float]) -> list[float]:
     """Convert feature dict to ordered list (for sklearn)."""
     return [features[col] for col in FEATURE_COLUMNS]

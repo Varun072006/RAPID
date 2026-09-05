@@ -13,6 +13,8 @@ Metrics:
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 from sklearn.calibration import calibration_curve
 
@@ -22,7 +24,7 @@ def evaluate_calibration(
     y_pred_proba: np.ndarray,
     n_bins: int = 10,
     action_name: str = "",
-) -> dict:
+) -> dict[str, Any]:
     """
     Evaluate probability calibration quality.
 

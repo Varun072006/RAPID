@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import enum
 from collections import deque
+from typing import Any
 
 from loguru import logger
 
@@ -95,7 +96,7 @@ class HealthDetector:
             return True
         return False
 
-    def status_summary(self) -> dict:
+    def status_summary(self) -> dict[str, Any]:
         """Serializable status for API/dashboard."""
         rate = self.failure_rate()
         h = self.health()

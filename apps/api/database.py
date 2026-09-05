@@ -4,14 +4,21 @@ Database setup — SQLAlchemy engine + session factory.
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from typing import TYPE_CHECKING
+
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from apps.api.config import get_settings
 from packages.domain.payments.models import Base
 
+if TYPE_CHECKING:
+    pass
 
-def get_engine():
+
+def get_engine() -> Engine:
     settings = get_settings()
     db_url = settings.database_url
     try:
@@ -44,8 +51,8 @@ def get_engine():
         )
 
 
-_engine = None
-_SessionLocal = None
+_engine: Engine | None = None
+_SessionLocal: sessionmaker[Session] | None = None
 
 
 def init_db() -> None:
@@ -56,10 +63,11 @@ def init_db() -> None:
     _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """FastAPI dependency that yields a DB session."""
     if _SessionLocal is None:
         init_db()
+    assert _SessionLocal is not None
     db = _SessionLocal()
     try:
         yield db

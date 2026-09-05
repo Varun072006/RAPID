@@ -62,7 +62,7 @@ def demo_normal_recovery() -> None:
         for action, prob in result.get("predictions", {}).items():
             print(f"   • {action:15s}: {prob:.1%}")
 
-        print(f"\n3. Revenue Optimizer Selection:")
+        print("\n3. Revenue Optimizer Selection:")
         print(f"   Selected Action:    {result.get('action')}")
         print(f"   Expected Net Value: ₹{result.get('expected_value_inr', 0):.2f}")
         print(f"   Policy Decision:    {result.get('policy_reason')}")
@@ -93,7 +93,7 @@ def demo_timeout_reconciliation() -> None:
     scenario = r.json()
     payment_id = scenario["payment_id"]
 
-    print(f"\n1. Injected Network Timeout during Capture:")
+    print("\n1. Injected Network Timeout during Capture:")
     print(f"   Payment ID:    {payment_id}")
     print(f"   Initial State: {scenario['state']} (Safety State)")
 
@@ -121,7 +121,7 @@ def demo_subscription_recovery() -> None:
     scenario = r.json()
     payment_id = scenario["payment_id"]
 
-    print(f"\n1. Subscription Mandate Debit Failed:")
+    print("\n1. Subscription Mandate Debit Failed:")
     print(f"   Payment ID:      {payment_id}")
     print(f"   Subscription ID: {scenario.get('subscription_id')}")
     print(f"   Amount:          ₹{scenario.get('amount_inr', 0):.2f}")
@@ -135,7 +135,10 @@ def demo_subscription_recovery() -> None:
         print(f"   Policy Guard:    {result.get('policy_reason')}")
         exec_res = result.get("execution_result", {})
         if isinstance(exec_res, dict) and "short_url" in exec_res:
-            print(f"   Omnichannel Link: {exec_res.get('short_url')} (Direct to subscriber via WhatsApp/SMS)")
+            print(
+                f"   Omnichannel Link: {exec_res.get('short_url')} "
+                "(Direct to subscriber via WhatsApp/SMS)"
+            )
         print("\n   [OK] Churn Mitigated without manual merchant intervention.")
     except Exception as e:
         print(f"   Recovery error: {e}")
@@ -146,7 +149,7 @@ def demo_adversarial_guardrail() -> None:
     r = requests.post(f"{API}/api/demo/inject", json={"scenario_type": "adversarial_llm"})
     scenario = r.json()
 
-    print(f"\n1. Malicious / Hallucinated Action Injected:")
+    print("\n1. Malicious / Hallucinated Action Injected:")
     print(f"   Payment ID: {scenario.get('payment_id')}")
     print("   Attempt:    Auto-retry high-value transaction of ₹35,000.00")
     print("   Threshold:  max_auto_amount = ₹25,000.00")
