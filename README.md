@@ -75,6 +75,62 @@ Payment event sequencer and state machine
 
 The repository is a modular monolith. Domain logic is separated from Razorpay integration, while PostgreSQL, Redis, FastAPI, Next.js, and Prometheus run through Docker Compose.
 
+## Project Mindmap
+
+```mermaid
+mindmap
+  root((RAPID))
+    Payment Truth
+      Razorpay webhooks
+      HMAC-SHA256 verification
+      Event deduplication
+      Event sequencing
+      State machine
+      UNKNOWN reconciliation
+    Recovery Intelligence
+      Causal simulator
+      Failure classifier
+      retry_now predictor
+      retry_later predictor
+      payment_link predictor
+      Expected Net Value optimizer
+    Safety Governance
+      Unknown-state guard
+      Amount limit
+      Retry cap
+      Confidence gate
+      Incident gate
+      Deterministic authorization
+      Idempotency keys
+    Execution
+      Razorpay Test Mode
+      Mock adapter
+      Payment links
+      Retry escalation
+      Audit timeline
+    Agent Layer
+      Ollama
+      Qwen3
+      Structured JSON proposal
+      Deterministic fallback
+    Platform
+      FastAPI API
+      PostgreSQL
+      SQLite fallback
+      Redis
+      Prometheus
+      Next.js dashboard
+      Docker Compose
+    Verification
+      Unit tests
+      Integration tests
+      Contract tests
+      Hypothesis properties
+      Failure injection
+      Held-out evaluation
+
+```
+
 ## Verified Benchmark
 
 The stored evaluation artifact contains 10,000 synthetic held-out scenarios:
