@@ -204,4 +204,3 @@ class RazorpayAdapter:
             return cast(dict[str, Any], response.json())
         except requests.HTTPError as exc:
             raise RazorpayError(str(exc)) from exc
-

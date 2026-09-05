@@ -101,4 +101,3 @@ def get_executive_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
             "automated_success_rate_pct": 94.2,
         },
     }
-

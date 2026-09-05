@@ -186,18 +186,18 @@ def reconcile_payment(
         raise HTTPException(status_code=404, detail=f"Payment {pid} not found")
 
     rzp_id = str(
-        (req.razorpay_payment_id if req else None)
-        or payment.razorpay_payment_id
-        or f"pay_{pid}"
+        (req.razorpay_payment_id if req else None) or payment.razorpay_payment_id or f"pay_{pid}"
     )
 
     settings = get_settings()
     razorpay: Any
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
+
         razorpay = MockRazorpayAdapter()
     else:
         from packages.integrations.razorpay.adapter import RazorpayAdapter
+
         razorpay = RazorpayAdapter(
             settings.razorpay_key_id,
             settings.razorpay_key_secret,
@@ -257,9 +257,11 @@ def batch_recover(
     razorpay: Any
     if settings.use_mock_razorpay:
         from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
+
         razorpay = MockRazorpayAdapter()
     else:
         from packages.integrations.razorpay.adapter import RazorpayAdapter
+
         razorpay = RazorpayAdapter(
             settings.razorpay_key_id,
             settings.razorpay_key_secret,
@@ -286,10 +288,7 @@ def batch_recover(
     else:
         limit = req.limit if req else 25
         failed_payments = (
-            db.query(Payment)
-            .filter(Payment.state == PaymentState.FAILED)
-            .limit(limit)
-            .all()
+            db.query(Payment).filter(Payment.state == PaymentState.FAILED).limit(limit).all()
         )
         batch_pids = [str(p.payment_id) for p in failed_payments]
 
@@ -335,4 +334,3 @@ def batch_recover(
         "action_breakdown": action_breakdown,
         "results": results,
     }
-
