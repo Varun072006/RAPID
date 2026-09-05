@@ -138,3 +138,45 @@ class MockRazorpayAdapter:
             "currency": "INR",
             "status": "created",
         }
+
+    def fetch_subscription(self, subscription_id: str) -> dict[str, Any]:
+        """Simulate Razorpay subscription fetch."""
+        return {
+            "id": subscription_id,
+            "entity": "subscription",
+            "plan_id": "plan_mock_saas_monthly",
+            "status": "halted",
+            "current_start": int(time.time()) - 86400 * 30,
+            "current_end": int(time.time()),
+            "ended_at": None,
+            "quantity": 1,
+            "notes": {"reason": "recurring_mandate_decline"},
+            "charge_at": int(time.time()),
+            "start_at": int(time.time()) - 86400 * 90,
+            "total_count": 12,
+            "paid_count": 2,
+            "customer_notify": 1,
+            "created_at": int(time.time()) - 86400 * 90,
+            "expire_by": int(time.time()) + 86400 * 7,
+            "has_scheduled_changes": False,
+            "change_scheduled_at": None,
+            "source": "api",
+            "offer_id": None,
+        }
+
+    def retry_subscription_invoice(
+        self,
+        subscription_id: str,
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        """Simulate retrying a failed subscription payment."""
+        return {
+            "id": f"inv_mock_{idempotency_key[:8]}",
+            "entity": "invoice",
+            "subscription_id": subscription_id,
+            "status": "issued",
+            "amount": 149900,
+            "currency": "INR",
+            "retry_scheduled": True,
+            "next_attempt_at": int(time.time()) + 21600,
+        }

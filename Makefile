@@ -48,6 +48,10 @@ format:  ## Auto-format code
 demo:  ## Run interactive demo script
 	uv run python scripts/demo.py
 
+demo-ready:  ## Prepare environment, verify models, and run demo cleanly
+	@uv run python -c "from pathlib import Path; exit(0 if Path('packages/ml/models/recovery_models.pkl').exists() else 1)" || (echo "Models missing. Training..." && $(MAKE) train)
+	uv run python scripts/demo.py
+
 db-init:  ## Create database tables
 	uv run python -c "from packages.domain.payments.models import Base; from sqlalchemy import create_engine; import os; engine = create_engine(os.environ['DATABASE_URL']); Base.metadata.create_all(engine)"
 

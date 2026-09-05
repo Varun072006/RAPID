@@ -150,3 +150,179 @@ def process_recovery(payment_id: str, db: Session = Depends(get_db)) -> dict:
         return orchestrator.process_failed_payment(payment_id)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+
+
+class ReconcileRequest(BaseModel):
+    payment_id: str
+    razorpay_payment_id: str | None = None
+
+
+@router.post("/recovery/reconcile")
+def reconcile_payment(
+    payment_id: str | None = None,
+    req: ReconcileRequest | None = None,
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Reconcile an UNKNOWN or timed-out payment with Razorpay's authoritative state.
+    Enforces idempotency and guarantees zero double-charge risk before any retry.
+    """
+    from apps.api.config import get_settings
+    from packages.domain.payments.event_store import EventStore
+    from packages.workflows.reconciliation.unknown_state import UnknownStateResolver
+
+    pid = (req.payment_id if req else None) or payment_id
+    if not pid:
+        raise HTTPException(status_code=400, detail="payment_id query param or request body is required")
+
+    payment = db.query(Payment).filter(Payment.payment_id == pid).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail=f"Payment {pid} not found")
+
+    rzp_id = (
+        (req.razorpay_payment_id if req else None)
+        or payment.razorpay_payment_id
+        or f"pay_{pid}"
+    )
+
+    settings = get_settings()
+    if settings.use_mock_razorpay:
+        from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
+        razorpay = MockRazorpayAdapter()
+    else:
+        from packages.integrations.razorpay.adapter import RazorpayAdapter
+        razorpay = RazorpayAdapter(
+            settings.razorpay_key_id,
+            settings.razorpay_key_secret,
+            settings.razorpay_webhook_secret,
+        )
+
+    resolver = UnknownStateResolver(razorpay=razorpay, db=db)
+    result = resolver.apply_reconciliation(payment_id=pid, razorpay_payment_id=rzp_id)
+
+    store = EventStore(db)
+    store.append_event(
+        pid,
+        "reconciliation_completed",
+        result,
+        actor="reconciler",
+    )
+
+    prev_state_str = payment.state.value if hasattr(payment.state, "value") else str(payment.state)
+    next_state_val = result["next_state"]
+    next_state_str = next_state_val.value if hasattr(next_state_val, "value") else str(next_state_val)
+
+    return {
+        "payment_id": pid,
+        "previous_state": prev_state_str,
+        "reconciled_state": next_state_str,
+        "outcome": result["outcome"],
+        "message": result["message"],
+        "safe_to_retry": result["safe_to_retry"],
+        "razorpay_id": rzp_id,
+    }
+
+
+class BatchRecoverRequest(BaseModel):
+    payment_ids: list[str] | None = None
+    limit: int = 25
+
+
+@router.post("/batch/recover")
+def batch_recover(
+    req: BatchRecoverRequest | None = None,
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Recover a batch of failed payments autonomously.
+    Measures cumulative money recovered, action distributions, and policy safety checks.
+    """
+    from apps.api.config import get_settings
+    from packages.domain.policy.engine import PolicyEngine
+    from packages.domain.recovery.optimizer import RevenueOptimizer
+    from packages.domain.recovery.system_health import HealthDetector
+    from packages.workflows.recovery.agent import RecoveryAgent
+    from packages.workflows.recovery.orchestrator import RecoveryOrchestrator
+
+    settings = get_settings()
+    if settings.use_mock_razorpay:
+        from packages.integrations.razorpay.mock_adapter import MockRazorpayAdapter
+        razorpay = MockRazorpayAdapter()
+    else:
+        from packages.integrations.razorpay.adapter import RazorpayAdapter
+        razorpay = RazorpayAdapter(
+            settings.razorpay_key_id,
+            settings.razorpay_key_secret,
+            settings.razorpay_webhook_secret,
+        )
+
+    orchestrator = RecoveryOrchestrator(
+        razorpay=razorpay,
+        optimizer=RevenueOptimizer(),
+        policy=PolicyEngine(),
+        health_detector=HealthDetector(),
+        agent=RecoveryAgent(
+            model=settings.llm_model,
+            ollama_host=settings.ollama_host,
+            provider=settings.llm_provider,
+        ),
+        db=db,
+    )
+
+    # Determine payments to process
+    batch_pids: list[str] = []
+    if req and req.payment_ids:
+        batch_pids = req.payment_ids
+    else:
+        limit = req.limit if req else 25
+        failed_payments = (
+            db.query(Payment)
+            .filter(Payment.state == PaymentState.FAILED)
+            .limit(limit)
+            .all()
+        )
+        batch_pids = [p.payment_id for p in failed_payments]
+
+    if not batch_pids:
+        return {
+            "total_processed": 0,
+            "recovered_count": 0,
+            "gross_amount_attempted_inr": 0.0,
+            "net_revenue_recovered_inr": 0.0,
+            "action_breakdown": {},
+            "results": [],
+            "message": "No failed payments eligible for batch recovery",
+        }
+
+    results = []
+    action_breakdown = {"retry_now": 0, "retry_later": 0, "payment_link": 0, "do_nothing": 0}
+    gross_attempted_paise = 0
+    net_recovered_paise = 0
+    recovered_count = 0
+
+    for pid in batch_pids:
+        p = db.query(Payment).filter(Payment.payment_id == pid).first()
+        if p:
+            gross_attempted_paise += p.amount
+        try:
+            res = orchestrator.process_failed_payment(pid)
+            results.append(res)
+            act = res.get("action", "do_nothing")
+            action_breakdown[act] = action_breakdown.get(act, 0) + 1
+            if res.get("authorized", False) and res.get("success", False):
+                recovered_count += 1
+                ev = res.get("expected_value_inr", 0.0)
+                net_recovered_paise += int(ev * 100)
+        except Exception as exc:
+            results.append({"payment_id": pid, "error": str(exc)})
+
+    return {
+        "total_processed": len(batch_pids),
+        "recovered_count": recovered_count,
+        "recovery_rate": round(recovered_count / len(batch_pids), 4) if batch_pids else 0.0,
+        "gross_amount_attempted_inr": round(gross_attempted_paise / 100.0, 2),
+        "net_revenue_recovered_inr": round(net_recovered_paise / 100.0, 2),
+        "action_breakdown": action_breakdown,
+        "results": results,
+    }
+

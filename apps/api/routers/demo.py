@@ -28,6 +28,8 @@ SCENARIO_TYPES = [
     "out_of_order",
     "normal_recovery",
     "adversarial_llm",
+    "subscription_recovery",
+    "checkout_abandonment",
 ]
 
 
@@ -291,6 +293,81 @@ def inject_scenario(req: InjectRequest, db: Session = Depends(get_db)) -> dict:
                 "A stale 'payment.failed' webhook was discarded. "
                 "State machine prevented invalid transition."
             ),
+        }
+
+    elif scenario == "subscription_recovery":
+        # Recurring SaaS mandate debit failed
+        sub_id = f"sub_demo_{payment_id[-6:]}"
+        payment = Payment(
+            payment_id=payment_id,
+            merchant_id="merchant_demo_saas",
+            customer_id="cust_subscriber_42",
+            amount=149900,  # ₹1,499 monthly subscription
+            payment_method="card",
+            bank="HDFC",
+            state=PaymentState.FAILED,
+        )
+        db.add(payment)
+        db.commit()
+
+        store.append_event(
+            payment_id,
+            "subscription_halted",
+            {
+                "scenario": "subscription_recovery",
+                "subscription_id": sub_id,
+                "amount_inr": 1499.0,
+                "reason": "recurring_mandate_declined_insufficient_funds",
+            },
+            actor="razorpay_webhook",
+        )
+
+        return {
+            "scenario": "subscription_recovery",
+            "payment_id": payment_id,
+            "subscription_id": sub_id,
+            "state": "FAILED",
+            "amount_inr": 1499.0,
+            "description": (
+                "Recurring SaaS subscription mandate debit failed (₹1,499.00). "
+                "RAPID triggers smart backoff schedule + generates payment link to avoid subscriber churn."
+            ),
+            "next_step": f"POST /api/recovery/process?payment_id={payment_id}",
+        }
+
+    elif scenario == "checkout_abandonment":
+        payment = Payment(
+            payment_id=payment_id,
+            merchant_id="merchant_demo_ecom",
+            customer_id="cust_cart_99",
+            amount=420000,  # ₹4,200 high-intent checkout
+            payment_method="upi",
+            state=PaymentState.FAILED,
+        )
+        db.add(payment)
+        db.commit()
+
+        store.append_event(
+            payment_id,
+            "checkout_dropped",
+            {
+                "scenario": "checkout_abandonment",
+                "amount_inr": 4200.0,
+                "reason": "customer_dropped_at_2fa",
+            },
+            actor="checkout_tracker",
+        )
+
+        return {
+            "scenario": "checkout_abandonment",
+            "payment_id": payment_id,
+            "state": "FAILED",
+            "amount_inr": 4200.0,
+            "description": (
+                "High-intent checkout dropped during UPI 2FA authorization (₹4,200.00). "
+                "RAPID omnichannel engine initiates instant Razorpay Payment Link."
+            ),
+            "next_step": f"POST /api/recovery/process?payment_id={payment_id}",
         }
 
     else:

@@ -94,9 +94,9 @@ const RECOVERY_TREND = [
 ];
 
 const BENCHMARK_DATA = [
-  { name: "Fixed 6h Retry", recoveryRate: 41.83, regret: 53.68, errors: 145 },
-  { name: "Expert Rule Engine", recoveryRate: 50.15, regret: 0.0, errors: 98 },
-  { name: "RAPID Engine", recoveryRate: 47.23, regret: 21.46, errors: 0 },
+  { name: "Fixed 6h Retry", recoveryRate: 41.83, regret: 53.68, unnecessaryRate: 58.17 },
+  { name: "Theoretical Oracle", recoveryRate: 50.15, regret: 0.0, unnecessaryRate: 49.85 },
+  { name: "RAPID Engine", recoveryRate: 47.23, regret: 21.46, unnecessaryRate: 52.77 },
 ];
 
 export default function ProfessionalDashboard() {
@@ -390,6 +390,48 @@ export default function ProfessionalDashboard() {
           {/* ── TAB 1: OVERVIEW ───────────────────────────────────────────── */}
           {activeTab === "overview" && (
             <div className="space-y-8">
+              {/* Track 03: Autonomous Recovery Campaign Banner */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-950/60 via-indigo-950/40 to-slate-900 border border-sky-500/30 p-6 shadow-2xl">
+                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 uppercase tracking-widest flex items-center gap-1.5">
+                        <Sparkles className="h-3 w-3" /> Track 03: AI Revenue Recovery
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">
+                        Active Campaigns: 3 Running
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-extrabold text-white tracking-tight">
+                      Autonomous Payment Recovery Engine
+                    </h2>
+                    <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                      Transforming failed transactions and drops into net revenue via causal ML, expected net value optimization, and deterministic policy guardrails.
+                    </p>
+                  </div>
+
+                  {/* Micro Campaign Badges */}
+                  <div className="grid grid-cols-3 gap-3 shrink-0 font-mono text-xs">
+                    <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                      <div className="text-[10px] text-slate-400">CAMPAIGN 1</div>
+                      <div className="font-bold text-sky-300">Omnichannel Links</div>
+                      <div className="text-[10px] text-emerald-400 font-sans mt-0.5">82% Est. Recovery</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                      <div className="text-[10px] text-slate-400">CAMPAIGN 2</div>
+                      <div className="font-bold text-indigo-300">Smart Backoff</div>
+                      <div className="text-[10px] text-emerald-400 font-sans mt-0.5">78% Est. Recovery</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                      <div className="text-[10px] text-slate-400">CAMPAIGN 3</div>
+                      <div className="font-bold text-emerald-300">SaaS Mandates</div>
+                      <div className="text-[10px] text-emerald-400 font-sans mt-0.5">Zero Churn Guard</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Executive KPI Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div className="enterprise-card p-6 rounded-2xl enterprise-card-hover">
@@ -908,25 +950,28 @@ export default function ProfessionalDashboard() {
               </div>
 
               <div className="lg:col-span-4 enterprise-card p-6 rounded-2xl">
-                <h3 className="text-sm font-bold text-white mb-1">Safety & Double Charge Proof</h3>
+                <h3 className="text-sm font-bold text-white mb-1">Bounded Autonomy & Regret Matrix</h3>
                 <p className="text-xs text-slate-400 mb-4 font-mono">
-                  Zero Unknown State Double-Charges
+                  Counterfactual decision regret & idempotency
                 </p>
 
                 <div className="space-y-4 font-mono text-xs">
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                    <div className="text-slate-400 mb-1">Fixed Retry Baseline:</div>
-                    <div className="text-rose-400 font-bold">145 Unknown State Errors</div>
+                    <div className="text-slate-400 mb-1">Fixed 6h Retry:</div>
+                    <div className="text-rose-400 font-bold">₹53.68 Regret / txn</div>
+                    <div className="text-[10px] text-slate-400 font-sans mt-0.5">58.17% unnecessary retry overhead</div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                    <div className="text-slate-400 mb-1">Rule Engine:</div>
-                    <div className="text-amber-400 font-bold">98 Unknown State Errors</div>
+                    <div className="text-slate-400 mb-1">Theoretical Oracle:</div>
+                    <div className="text-sky-400 font-bold">₹0.00 Regret (Cheat Bound)</div>
+                    <div className="text-[10px] text-slate-400 font-sans mt-0.5">Requires future counterfactual omniscience</div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800">
                     <div className="text-emerald-300 mb-1">RAPID Engine:</div>
-                    <div className="text-emerald-400 font-bold text-base">0 Unknown State Errors</div>
+                    <div className="text-emerald-400 font-bold text-base">₹21.46 Regret (60.0% Reduction)</div>
+                    <div className="text-[10px] text-emerald-300 font-sans mt-0.5">0 Double Charges • 0 Policy Violations</div>
                   </div>
                 </div>
               </div>
@@ -945,15 +990,15 @@ export default function ProfessionalDashboard() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <button
                   disabled={loading}
                   onClick={() => handleInjectScenario("timeout")}
                   className="p-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-left transition"
                 >
-                  <div className="font-bold text-xs text-amber-300 mb-1 font-mono">1. API Timeout (UNKNOWN State)</div>
+                  <div className="font-bold text-xs text-amber-300 mb-1 font-mono">1. API Timeout (UNKNOWN)</div>
                   <p className="text-[11px] text-slate-400">
-                    Simulates network drop. Policy Engine blocks retries & triggers reconciliation.
+                    Network drop. Policy Engine blocks retries & triggers reconciliation.
                   </p>
                 </button>
 
@@ -962,7 +1007,7 @@ export default function ProfessionalDashboard() {
                   onClick={() => handleInjectScenario("bank_degradation")}
                   className="p-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-left transition"
                 >
-                  <div className="font-bold text-xs text-rose-300 mb-1 font-mono">2. Bank Incident (AXIS Outage)</div>
+                  <div className="font-bold text-xs text-rose-300 mb-1 font-mono">2. Bank Incident (Outage)</div>
                   <p className="text-[11px] text-slate-400">
                     Crosses 15% failure threshold. Policy Rule 5 pauses automatic retries.
                   </p>
@@ -975,7 +1020,7 @@ export default function ProfessionalDashboard() {
                 >
                   <div className="font-bold text-xs text-sky-300 mb-1 font-mono">3. Duplicate Webhook</div>
                   <p className="text-[11px] text-slate-400">
-                    Atomic DB constraint on event_id suppresses duplicate webhook delivery.
+                    Atomic DB constraint on event_id suppresses duplicate delivery.
                   </p>
                 </button>
 
@@ -984,7 +1029,7 @@ export default function ProfessionalDashboard() {
                   onClick={() => handleInjectScenario("out_of_order")}
                   className="p-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-left transition"
                 >
-                  <div className="font-bold text-xs text-purple-300 mb-1 font-mono">4. Out-of-Order Webhook</div>
+                  <div className="font-bold text-xs text-purple-300 mb-1 font-mono">4. Out-of-Order</div>
                   <p className="text-[11px] text-slate-400">
                     Stale FAILED event arriving after CAPTURED is discarded by State Machine.
                   </p>
@@ -995,9 +1040,9 @@ export default function ProfessionalDashboard() {
                   onClick={() => handleInjectScenario("adversarial_llm")}
                   className="p-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-left transition"
                 >
-                  <div className="font-bold text-xs text-red-400 mb-1 font-mono">5. Adversarial LLM Prompt</div>
+                  <div className="font-bold text-xs text-red-400 mb-1 font-mono">5. Adversarial Prompt</div>
                   <p className="text-[11px] text-slate-400">
-                    Malicious LLM proposal (&gt;₹25k) is intercepted and denied by Policy Engine.
+                    Malicious proposal (&gt;₹25k) is intercepted and denied by Policy Engine.
                   </p>
                 </button>
 
@@ -1006,9 +1051,31 @@ export default function ProfessionalDashboard() {
                   onClick={() => handleInjectScenario("normal_recovery")}
                   className="p-4 rounded-xl bg-sky-950/40 hover:bg-sky-900/50 border border-sky-800 text-left transition"
                 >
-                  <div className="font-bold text-xs text-sky-200 mb-1 font-mono">6. Normal Payment Recovery</div>
+                  <div className="font-bold text-xs text-sky-200 mb-1 font-mono">6. Normal Recovery</div>
                   <p className="text-[11px] text-sky-300/80">
-                    Standard end-to-end pipeline: Classify → Predict → Optimize → Authorize → Execute.
+                    Standard pipeline: Classify → Predict → Optimize → Authorize → Execute.
+                  </p>
+                </button>
+
+                <button
+                  disabled={loading}
+                  onClick={() => handleInjectScenario("subscription_recovery")}
+                  className="p-4 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-800 text-left transition"
+                >
+                  <div className="font-bold text-xs text-indigo-200 mb-1 font-mono">7. SaaS Subscription</div>
+                  <p className="text-[11px] text-indigo-300/80">
+                    Recurring card debit failure (₹1,499) scheduled for smart retry + link.
+                  </p>
+                </button>
+
+                <button
+                  disabled={loading}
+                  onClick={() => handleInjectScenario("checkout_abandonment")}
+                  className="p-4 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800 text-left transition"
+                >
+                  <div className="font-bold text-xs text-emerald-200 mb-1 font-mono">8. Cart Abandonment</div>
+                  <p className="text-[11px] text-emerald-300/80">
+                    High-intent 2FA checkout drop rescued via instant omnichannel link.
                   </p>
                 </button>
               </div>

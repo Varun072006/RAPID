@@ -169,3 +169,39 @@ class RazorpayAdapter:
             return response.json()
         except requests.HTTPError as exc:
             raise RazorpayError(str(exc)) from exc
+
+    def fetch_subscription(self, subscription_id: str) -> dict[str, Any]:
+        """Fetch Razorpay subscription details."""
+        try:
+            response = requests.get(
+                f"{self.BASE_URL}/subscriptions/{subscription_id}",
+                auth=self._auth,
+                timeout=self.DEFAULT_TIMEOUT,
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.HTTPError as exc:
+            raise RazorpayError(str(exc)) from exc
+
+    def retry_subscription_invoice(
+        self,
+        subscription_id: str,
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        """Retry charging a subscription invoice."""
+        headers = {
+            "Idempotency-Key": idempotency_key,
+            "Content-Type": "application/json",
+        }
+        try:
+            response = requests.post(
+                f"{self.BASE_URL}/subscriptions/{subscription_id}/charge",
+                auth=self._auth,
+                headers=headers,
+                timeout=self.DEFAULT_TIMEOUT,
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.HTTPError as exc:
+            raise RazorpayError(str(exc)) from exc
+
